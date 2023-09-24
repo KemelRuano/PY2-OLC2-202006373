@@ -1,0 +1,68 @@
+
+button {
+    top: 30px;
+    left: 10px;
+    width: 160px;
+    height: 50px;
+    font-size:40px;
+    font: bold 140% monospace;
+    background: rgb(255, 251, 0);
+    border: 5px solid rgb(0, 0, 0);
+    cursor: pointer;
+  }
+  
+
+  button:hover {
+    background-color: #ffffff;
+  }
+
+  .file-input-wrapper {
+    position: relative;
+    display: inline-block;
+    background-color: #ffffff;
+  }
+
+  .file-input {
+    display: none;
+  }
+  .file-input-label {
+    background-color:  rgb(255, 251, 0);
+    color: #000000;
+    padding: 10px 20px;
+    cursor: pointer;
+    font: bold 140% monospace;
+    border: 5px solid rgb(0, 0, 0);
+  }
+  .file-input-label:hover {
+    background-color: #ffffff;
+  }
+
+  
+  .custom-table td {
+    white-space: nowrap;
+    max-width: 500px;
+    background-color: #000000;
+    color: #ffffff;
+    padding: 12px;
+    border: 3px solid #fbff00;
+    border-radius: 15px;
+    font: bold 90% sans-serif;
+    overflow: auto;
+    
+}
+
+.EntornoTable {
+  border-collapse: collapse;
+  width: 100%;
+}
+.EntornoTable th,
+.EntornoTable td {
+  border: 1px solid #000000;
+  padding: 8px;
+  text-align: left;
+}
+
+.EntornoTable th {
+  background-color: #000000;
+  color: white;
+}

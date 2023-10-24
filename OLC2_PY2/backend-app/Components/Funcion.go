@@ -424,6 +424,7 @@ func (v *Visitor) VisitRetornar(ctx *parser.RetornarContext) interface{} {
 	var valor interface{}
 	if ctx.BREAK() != nil {
 		v.Break = true
+		valor = "break"
 	} else if ctx.RETURN() != nil {
 		if ctx.Expresion() != nil {
 			v.EntornoActual.Retorno = true
@@ -433,7 +434,7 @@ func (v *Visitor) VisitRetornar(ctx *parser.RetornarContext) interface{} {
 		}
 
 	} else if ctx.CONTINUE() != nil {
-		v.Continue = true
+		valor = "continue"
 	}
 	return valor
 }

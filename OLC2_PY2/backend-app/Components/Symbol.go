@@ -5,6 +5,7 @@ type Simbolo struct {
 	Type      string
 	TypeValue string
 	EsVector  bool
+	Stack     int
 }
 
 func NewSimbolo(valor interface{}, tipo string, tipo_variable string, vec bool) Simbolo {
@@ -13,6 +14,7 @@ func NewSimbolo(valor interface{}, tipo string, tipo_variable string, vec bool) 
 		Type:      tipo,
 		TypeValue: tipo_variable,
 		EsVector:  vec,
+		Stack:     0,
 	}
 }
 
@@ -32,4 +34,12 @@ func NewSimbGlobal(t string, ty string, env string, l int, c int) GlobalSymbol {
 		Line:       l,
 		Col:        c,
 	}
+}
+
+func (e *Simbolo) SetStack(d int) {
+	e.Stack = d
+}
+
+func (e *Simbolo) GetStack() int {
+	return e.Stack
 }

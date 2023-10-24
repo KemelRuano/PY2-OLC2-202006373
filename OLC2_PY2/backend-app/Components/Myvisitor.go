@@ -12,16 +12,27 @@ import (
 	"github.com/antlr4-go/antlr/v4"
 )
 
+// Variables de manejo en C3D
+var Print_String = false
+var Concat_String = false
+var TypeBoolC3D int = 0
+var ControlString = false
+
+// while
+var LabelPassSI = ""
+var LabelPassNo = ""
+
+// manejo de operadores AND y OR
+var Es_AND_NOT = 0
+var LabelAN = ""
+
+var ControlCiclos = false
+
 var TypeDate string = ""
 var RET_SET bool = false
 var RET_FUN bool = false
 
 var RETVALORDEELSE bool = false
-
-// Control de sentencia if
-var EnIF bool = false
-var EnElseIf bool = false
-var EnElse bool = false
 
 type Visitor struct {
 	*parser.BaseSintaxVisitor
@@ -29,6 +40,7 @@ type Visitor struct {
 	ListErrores   []*Miceleanos.ErrorAnalizador
 	TableGlobal   map[string]GlobalSymbol
 	ListConsole   []string
+	Traductor     *Traduction
 	Retorno       bool
 	Break         bool
 	Continue      bool
@@ -39,6 +51,8 @@ func NewVisitor(ent *Entorno) *Visitor {
 		EntornoActual: ent,
 		ListErrores:   []*Miceleanos.ErrorAnalizador{},
 		TableGlobal:   make(map[string]GlobalSymbol),
+		ListConsole:   []string{},
+		Traductor:     NewTraduction(),
 	}
 }
 
@@ -61,124 +75,13 @@ func (v *Visitor) AddGlobalSimbol(id string, value GlobalSymbol) {
 
 func (v *Visitor) Visit(tree antlr.ParseTree) interface{} {
 	switch t := tree.(type) {
-	case *parser.InicioContext:
-		return v.VisitInicio(t)
-
-	case *parser.ListaContext:
-		return v.VisitLista(t)
-
-	case *parser.Lista_procesoContext:
-		return v.VisitLista_proceso(t)
-
-	case *parser.DeclaracionContext:
-		return v.VisitDeclaracion(t)
-
-	case *parser.AsignacionContext:
-		return v.VisitAsignacion(t)
-
-	case *parser.WhileContext:
-		return v.VisitWhile(t)
-
-	case *parser.SwitchContext:
-		return v.VisitSwitch(t)
-
-	case *parser.PrintContext:
-		return v.VisitPrint(t)
-
-	case *parser.IfContext:
-		return v.VisitIf(t)
-	case *parser.ForContext:
-		return v.VisitFor(t)
-	case *parser.GuardContext:
-		return v.VisitGuard(t)
-	case *parser.FuncvectorListContext:
-		return v.VisitFuncvectorList(t)
-
-	case *parser.FuncionesContext:
-		return v.VisitFunciones(t)
-
-	case *parser.ParametrosContext:
-		return v.VisitParametros(t)
-
-	case *parser.FuncLLamadaContext:
-		return v.VisitFuncLLamada(t)
-
-	case *parser.ParametrosLLamadaContext:
-		return v.VisitParametrosLLamada(t)
-
-	case *parser.RetornarContext:
-		return v.VisitRetornar(t)
-
-	case *parser.PrintLLamadaContext:
-		return v.VisitPrintLLamada(t)
-	case *parser.CasteoContext:
-		return v.VisitCasteo(t)
-
-	case *parser.EstructsContext:
-		return v.VisitEstructs(t)
-		//-------------------------------------------
-	case *parser.AsignacionVariableContext:
-		return v.VisitAsignacionVariable(t)
-	case *parser.AsignacionVectorContext:
-		return v.VisitAsignacionVector(t)
-	case *parser.Asigtipo1Context:
-		return v.VisitAsigtipo1(t)
-
-	case *parser.Asigtipo2Context:
-		return v.VisitAsigtipo2(t)
-
-	case *parser.NumberValorContext:
-		return v.VisitNumberValor(t)
-	case *parser.BoolValorContext:
-		return v.VisitBoolValor(t)
-	case *parser.StringValorContext:
-		return v.VisitStringValor(t)
-	case *parser.SinValorContext:
-		return v.VisitSinValor(t)
-	case *parser.ParentexprContext:
-		return v.VisitParentexpr(t)
-	case *parser.IdValorContext:
-		return v.VisitIdValor(t)
-
-	case *parser.OpAritmeticoContext:
-		return v.VisitOpAritmetico(t)
-	case *parser.OpComparativoContext:
-		return v.VisitOpComparativo(t)
-	case *parser.OpRelacionalContext:
-		return v.VisitOpRelacional(t)
-	case *parser.OpLogicoContext:
-		return v.VisitOpLogico(t)
-	case *parser.OpLogicoNotContext:
-		return v.VisitOpLogicoNot(t)
-
-	case *parser.Elseif_Context:
-		return v.VisitElseif_(t)
-
-	case *parser.CasoContext:
-		return v.VisitCaso(t)
-	case *parser.DefaultContext:
-		return v.VisitDefault(t)
-
-	case *parser.Dec_vectorContext:
-		return v.VisitDec_vector(t)
-	case *parser.VectorCountContext:
-		return v.VisitVectorCount(t)
-	case *parser.VectorVacioContext:
-		return v.VisitVectorVacio(t)
-	case *parser.Dec_vector_V_CContext:
-		return v.VisitDec_vector_V_C(t)
-	case *parser.VectorAsignacionContext:
-		return v.VisitVectorAsignacion(t)
-	case *parser.BloqueContext:
-		return v.VisitBloque(t)
-
-	case *parser.ValorsimpleContext:
-		return v.VisitValorsimple(t)
-
+	case *antlr.ErrorNodeImpl:
+		return "ERROR PERRRROOOOOOO  " + t.GetText()
 	default:
-		return false
+		return tree.Accept(v)
 	}
 }
+
 func (v *Visitor) VisitInicio(ctx *parser.InicioContext) interface{} {
 	v.Visit(ctx.Lista())
 	return true
@@ -192,6 +95,13 @@ func (v *Visitor) VisitLista(ctx *parser.ListaContext) interface{} {
 
 	for i := 0; ctx.Lista_proceso(i) != nil; i++ {
 		v.Visit(ctx.Lista_proceso(i))
+	}
+
+	if Print_String {
+		v.Traductor.List_funciones = append(v.Traductor.List_funciones, v.Traductor.PrimitiveString())
+	}
+	if Concat_String {
+		v.Traductor.List_funciones = append(v.Traductor.List_funciones, v.Traductor.PrimiteConcatString())
 	}
 	return true
 }
@@ -239,13 +149,16 @@ func (v *Visitor) VisitLista_proceso(ctx *parser.Lista_procesoContext) interface
 	if ctx.Estructs() != nil {
 		return v.Visit(ctx.Estructs())
 	}
+	if ctx.Comentarios() != nil {
+		return v.Visit(ctx.Comentarios())
+	}
 	return nil
 }
 
 func (v *Visitor) VisitDeclaracion(ctx *parser.DeclaracionContext) interface{} {
 
 	if ctx.Dec_tipo_valor() != nil {
-		v.Visit(ctx.Dec_tipo_valor())
+		return v.Visit(ctx.Dec_tipo_valor())
 	}
 	if ctx.Dec_valor() != nil {
 		v.Visit(ctx.Dec_valor())
@@ -262,40 +175,101 @@ func (v *Visitor) VisitDeclaracion(ctx *parser.DeclaracionContext) interface{} {
 // ------------------------------------ DECLARACION DE VARIABLES ----------------------------------------
 //------------------------------------------------------------------------------------------------------
 
-func (v *Visitor) VisitAsigtipo1(ctx *parser.Asigtipo1Context) interface{} {
+func (v *Visitor) VisitDeclaracionTipo(ctx *parser.DeclaracionTipoContext) interface{} {
 	TypeDate = ctx.Tipo().GetText()
-	Line := ctx.Expresion().GetStart().GetLine()
-	Col := ctx.Expresion().GetStart().GetColumn()
+	LineValor := ctx.Expresion().GetStart().GetLine()
+	ColValor := ctx.Expresion().GetStart().GetColumn()
+	LineId := ctx.ID().GetSymbol().GetLine()
+	ColId := ctx.ID().GetSymbol().GetColumn()
 	Valor := v.Visit(ctx.Expresion())
-	if Valor == false {
+
+	// validar errores entre operaciones
+	if Valor.(Value).Valor == "-1" {
+		v.AddError(LineValor, ColValor, "DECLARACION", "Error en la operacion", "SEMANTICO")
 		return false
 	}
 
-	Dec := Proceso.NewDeclaracion(ctx.ID().GetText(), ctx.Tipo().GetText(), Valor)
+	Dec := Proceso.NewDeclaracion(ctx.ID().GetText(), ctx.Tipo().GetText(), Valor.(Value).Valor)
 	CorrectType := Dec.EsTipo()
-
 	if CorrectType {
 		CreateSimbol := NewSimbolo(Dec.GetValor(), Dec.GetTipo(), ctx.GetOp().GetText(), false)
 		is_exist := v.EntornoActual.EnvAddSimbolo(Dec.GetVariable(), CreateSimbol)
 		if is_exist {
 			TaGlobal := NewSimbGlobal("Variable", Dec.GetTipo(), v.EntornoActual.GetEntorno(), ctx.ID().GetSymbol().GetLine(), ctx.ID().GetSymbol().GetLine())
 			v.AddGlobalSimbol(Dec.GetVariable(), TaGlobal)
+
+			// C3D El id se agrega a lista de temporales
+			if Dec.GetTipo() == "Int" || Dec.GetTipo() == "Float" {
+				NewStack := v.Traductor.GetIndex()
+				v.Traductor.AddComentario("\t//Declaracion Numerica")
+				if Valor.(Value).Label1 != nil {
+					v.Traductor.SetStack(fmt.Sprint(NewStack), fmt.Sprint(Valor.(Value).Temp))
+				} else {
+					v.Traductor.SetStack(fmt.Sprint(NewStack), fmt.Sprint(Valor.(Value).Valor))
+				}
+				v.Traductor.Br()
+				v.EntornoActual.ActualizarStack(Dec.GetVariable(), NewStack)
+
+			} else if Dec.GetTipo() == "Bool" {
+				NewLabel1 := ""
+				NewLabel3 := ""
+				Index := v.Traductor.GetIndex()
+				v.Traductor.AddComentario("\t//Declaracion Bool")
+				switch TypeBoolC3D {
+				case 2:
+					NewLabel1 = Valor.(Value).Label1.(string)
+					NewLabel3 = Valor.(Value).Label2.(string)
+				default:
+					NewLabel1 = v.Traductor.NewLabel()
+					NewLabel3 = v.Traductor.NewLabel()
+					if Dec.GetValor().(bool) {
+						v.Traductor.AddGoto(NewLabel1)
+					} else {
+						v.Traductor.AddGoto(NewLabel3)
+					}
+				}
+
+				NewLabel2 := v.Traductor.NewLabel()
+				v.Traductor.AddLabel(NewLabel1) // Lx:
+				v.Traductor.SetStack(fmt.Sprint(Index), "1")
+				v.Traductor.AddGoto(NewLabel2)  // goto Lx;
+				v.Traductor.AddLabel(NewLabel3) // Lx:
+				v.Traductor.SetStack(fmt.Sprint(Index), "0")
+				v.Traductor.AddGoto(NewLabel2)  // Lx:
+				v.Traductor.AddLabel(NewLabel2) // Lx:
+				v.EntornoActual.ActualizarStack(Dec.GetVariable(), Index)
+			} else if Dec.GetTipo() == "String" {
+				NewStack := v.Traductor.GetIndex()
+				v.Traductor.AddComentario("\t//Declaracion String")
+				v.Traductor.SetStack(fmt.Sprint(NewStack), fmt.Sprint(Valor.(Value).Temp))
+				v.Traductor.Br()
+				v.EntornoActual.ActualizarStack(Dec.GetVariable(), NewStack)
+			} else if Dec.GetTipo() == "Character" {
+				NewStack := v.Traductor.GetIndex()
+				v.Traductor.AddComentario("\t//Declaracion Character")
+				v.Traductor.SetStack(fmt.Sprint(NewStack), fmt.Sprint(Valor.(Value).Temp))
+				v.Traductor.Br()
+				v.EntornoActual.ActualizarStack(Dec.GetVariable(), NewStack)
+			}
+
 		} else {
-			v.AddError(ctx.ID().GetSymbol().GetLine(), ctx.ID().GetSymbol().GetLine(), "DECLARACION", "Ya existe en el entorno actual: "+Dec.GetVariable(), "SEMANTICO")
+			v.AddError(LineId, ColId, "DECLARACION", "Ya existe en el entorno actual: "+Dec.GetVariable(), "SEMANTICO")
 			return false
 		}
 	} else {
-		v.AddError(Line, Col, "DECLARACION", "Especifico "+Dec.GetTipo()+"()", "SEMANTICO")
+		v.AddError(LineValor, ColValor, "DECLARACION", "Especifico "+Dec.GetTipo()+"()", "SEMANTICO")
 		return false
 	}
-	return true
+	return "Kemel Ruano"
 }
 
-func (v *Visitor) VisitAsigtipo2(ctx *parser.Asigtipo2Context) interface{} {
+func (v *Visitor) VisitDeclaracionTipoImplicito(ctx *parser.DeclaracionTipoImplicitoContext) interface{} {
+
 	Line := ctx.Expresion().GetStart().GetLine()
 	Col := ctx.Expresion().GetStart().GetColumn()
 	TypeDate = ""
-	Dec := Proceso.NewDeclaracion(ctx.ID().GetText(), "", v.Visit(ctx.Expresion()))
+	Valor := v.Visit(ctx.Expresion())
+	Dec := Proceso.NewDeclaracion(ctx.ID().GetText(), "", Valor.(Value).Valor)
 	CorrectType := Dec.EsSinTipo()
 	if CorrectType {
 		CreateSimbol := NewSimbolo(Dec.GetValor(), Dec.GetTipo(), ctx.GetOp().GetText(), false)
@@ -303,6 +277,61 @@ func (v *Visitor) VisitAsigtipo2(ctx *parser.Asigtipo2Context) interface{} {
 		if is_exist {
 			TaGlobal := NewSimbGlobal("Variable", Dec.GetTipo(), v.EntornoActual.GetEntorno(), ctx.ID().GetSymbol().GetLine(), ctx.ID().GetSymbol().GetColumn())
 			v.AddGlobalSimbol(Dec.GetVariable(), TaGlobal)
+
+			// CODIGO EN C3D
+			if Dec.GetTipo() == "Int" || Dec.GetTipo() == "Float" {
+				NewStack := v.Traductor.GetIndex()
+				v.Traductor.AddComentario("\t//Declaracion Numerica")
+				if Valor.(Value).Label1 != nil {
+					v.Traductor.SetStack(fmt.Sprint(NewStack), fmt.Sprint(Valor.(Value).Temp))
+				} else {
+					v.Traductor.SetStack(fmt.Sprint(NewStack), fmt.Sprint(Valor.(Value).Valor))
+				}
+				v.Traductor.Br()
+				v.EntornoActual.ActualizarStack(Dec.GetVariable(), NewStack)
+
+			} else if Dec.GetTipo() == "Bool" {
+				NewLabel1 := ""
+				NewLabel3 := ""
+				Index := v.Traductor.GetIndex()
+				v.Traductor.AddComentario("\t//Declaracion Bool")
+				switch TypeBoolC3D {
+				case 2:
+					NewLabel1 = Valor.(Value).Label1.(string)
+					NewLabel3 = Valor.(Value).Label2.(string)
+				default:
+					NewLabel1 = v.Traductor.NewLabel()
+					NewLabel3 = v.Traductor.NewLabel()
+					if Dec.GetValor().(bool) {
+						v.Traductor.AddGoto(NewLabel1)
+					} else {
+						v.Traductor.AddGoto(NewLabel3)
+					}
+				}
+
+				NewLabel2 := v.Traductor.NewLabel()
+				v.Traductor.AddLabel(NewLabel1) // Lx:
+				v.Traductor.SetStack(fmt.Sprint(Index), "1")
+				v.Traductor.AddGoto(NewLabel2)  // goto Lx;
+				v.Traductor.AddLabel(NewLabel3) // Lx:
+				v.Traductor.SetStack(fmt.Sprint(Index), "0")
+				v.Traductor.AddGoto(NewLabel2)  // Lx:
+				v.Traductor.AddLabel(NewLabel2) // Lx:
+				v.EntornoActual.ActualizarStack(Dec.GetVariable(), Index)
+			} else if Dec.GetTipo() == "String" {
+				NewStack := v.Traductor.GetIndex()
+				v.Traductor.AddComentario("\t//Declaracion String")
+				v.Traductor.SetStack(fmt.Sprint(NewStack), fmt.Sprint(Valor.(Value).Temp))
+				v.Traductor.Br()
+				v.EntornoActual.ActualizarStack(Dec.GetVariable(), NewStack)
+			} else if Dec.GetTipo() == "Character" {
+				NewStack := v.Traductor.GetIndex()
+				v.Traductor.AddComentario("\t//Declaracion Character")
+				v.Traductor.SetStack(fmt.Sprint(NewStack), fmt.Sprint(Valor.(Value).Temp))
+				v.Traductor.Br()
+				v.EntornoActual.ActualizarStack(Dec.GetVariable(), NewStack)
+			}
+
 		} else {
 			v.AddError(ctx.ID().GetSymbol().GetLine(), ctx.ID().GetSymbol().GetColumn(), "DECLARACION", "Ya existe en el entorno actual: "+Dec.GetVariable(), "SEMANTICO")
 			return false
@@ -334,8 +363,103 @@ func (v *Visitor) VisitAsignacionVariable(ctx *parser.AsignacionVariableContext)
 
 	if Encontrado.Value != nil {
 		if Encontrado.TypeValue == "var" {
-			newExpresion := v.Visit(ctx.Expresion())
-			NewValor := Proceso.NewConcatenar(Encontrado.Value, newExpresion, ctx.GetOp().GetText()).Reasignacion()
+			var newExpresion interface{}
+
+			// iniciando Traduccion en C3D
+			if Encontrado.Type == "Int" || Encontrado.Type == "Float" {
+				newExpresion = v.Visit(ctx.Expresion())
+				if ctx.GetOp().GetText() == "=" {
+					v.Traductor.AddComentario("\t//Asignacion =")
+					v.Traductor.SetStack(fmt.Sprint(Encontrado.Stack), fmt.Sprint(newExpresion.(Value).Temp))
+				} else if ctx.GetOp().GetText() == "+=" {
+					v.Traductor.AddComentario("\t//Asignacion +=")
+					NewTemp := v.Traductor.NewTemp()
+					v.Traductor.GetStack(NewTemp, fmt.Sprint(Encontrado.Stack))
+					NewTemp2 := v.Traductor.NewTemp()
+					v.Traductor.Igual(NewTemp2, NewTemp, newExpresion.(Value).Temp, "+")
+					v.Traductor.SetStack(fmt.Sprint(Encontrado.Stack), fmt.Sprint(NewTemp2))
+				} else if ctx.GetOp().GetText() == "-=" {
+					v.Traductor.AddComentario("\t//Asignacion -=")
+					NewTemp := v.Traductor.NewTemp()
+					v.Traductor.GetStack(NewTemp, fmt.Sprint(Encontrado.Stack))
+					NewTemp2 := v.Traductor.NewTemp()
+					v.Traductor.Igual(NewTemp2, NewTemp, newExpresion.(Value).Temp, "-")
+					v.Traductor.SetStack(fmt.Sprint(Encontrado.Stack), fmt.Sprint(NewTemp2))
+				}
+			} else if Encontrado.Type == "Bool" {
+				newExpresion = v.Visit(ctx.Expresion())
+				if ctx.GetOp().GetText() == "=" {
+					v.Traductor.AddComentario("\t//Asignacion Bool =")
+					if newExpresion.(Value).Valor.(bool) {
+						v.Traductor.SetStack(fmt.Sprint(Encontrado.Stack), "1")
+					} else {
+						v.Traductor.SetStack(fmt.Sprint(Encontrado.Stack), "0")
+					}
+
+				}
+			} else if Encontrado.Type == "String" {
+				if ctx.GetOp().GetText() == "=" {
+					v.Traductor.AddComentario("\t//Asignacion String o Char =")
+					newExpresion = v.Visit(ctx.Expresion())
+					v.Traductor.SetStack(fmt.Sprint(Encontrado.Stack), fmt.Sprint(newExpresion.(Value).Temp))
+				} else if ctx.GetOp().GetText() == "+=" {
+					Concat_String = true
+					ControlString = true
+					newExpresion = v.Visit(ctx.Expresion())
+					NewString := newExpresion.(Value).Valor.(string)
+					NewTemp := v.Traductor.NewTemp()
+					v.Traductor.Br()
+					v.Traductor.AddComentario("\t//Concatenando String")
+					v.Traductor.Br()
+					v.Traductor.Igual(NewTemp, "H", nil, nil)
+					byteArray := []byte(NewString)
+					for i := 0; i < len(byteArray); i++ {
+						v.Traductor.SetHeap("(int)H", strconv.Itoa(int(byteArray[i])))
+						v.Traductor.Contador("H", "H", "+", "1")
+					}
+					v.Traductor.SetHeap("(int)H", "-1")
+					v.Traductor.Contador("H", "H", "+", "1")
+					v.Traductor.Br()
+
+					NewTemp2 := v.Traductor.NewTemp()
+					v.Traductor.GetStack(NewTemp2, fmt.Sprint(Encontrado.Stack))
+					NewTemp3 := v.Traductor.NewTemp()
+					v.Traductor.Igual(NewTemp3, "H", nil, nil)
+					v.Traductor.Br()
+					v.Traductor.Br()
+					NewTemp4 := v.Traductor.NewTemp()
+					v.Traductor.Igual(NewTemp4, "P", v.EntornoActual.Size, "+")
+					v.Traductor.Igual(NewTemp4, NewTemp4, "1", "+")
+					v.Traductor.SetStack("(int) "+fmt.Sprint(NewTemp4), NewTemp2)
+					v.Traductor.Igual("P", "P", v.EntornoActual.Size, "+")
+					v.Traductor.callVoid("ConcatenarString")
+					v.Traductor.Igual("P", "P", v.EntornoActual.Size, "-")
+					v.Traductor.Br()
+
+					v.Traductor.Igual(NewTemp4, "P", v.EntornoActual.Size, "+")
+					v.Traductor.Igual(NewTemp4, NewTemp4, "1", "+")
+					v.Traductor.SetStack("(int) "+fmt.Sprint(NewTemp4), NewTemp)
+					v.Traductor.Igual("P", "P", v.EntornoActual.Size, "+")
+					v.Traductor.callVoid("ConcatenarString")
+					v.Traductor.Igual("P", "P", v.EntornoActual.Size, "-")
+					v.Traductor.Br()
+
+					v.Traductor.SetHeap("(int)H", "-1")
+					v.Traductor.Contador("H", "H", "+", "1")
+					v.Traductor.Br()
+
+					v.Traductor.SetStack(fmt.Sprint(Encontrado.Stack), NewTemp3)
+					v.Traductor.Br()
+					v.Traductor.AddComentario("\t//Fin Concatenando String")
+
+					ControlString = false
+
+				}
+
+			}
+			// fin de traduccion en C3D
+
+			NewValor := Proceso.NewConcatenar(Encontrado.Value, newExpresion.(Value).Valor, ctx.GetOp().GetText()).Reasignacion()
 			if Miceleanos.IsChar(NewValor) {
 				v.AddError(ctx.GetOp().GetLine(), ctx.GetOp().GetColumn(), "ASIGNACION", "Tipo: "+Encontrado.Type+" No permite: "+ctx.GetOp().GetText(), "SEMANTICO")
 				return false
@@ -363,12 +487,12 @@ func (v *Visitor) VisitNumberValor(ctx *parser.NumberValorContext) interface{} {
 
 	Entero, error := strconv.ParseInt(ctx.GetText(), 10, 64)
 	if error == nil {
-		return Entero
+		return NewValue(Entero, nil, nil, Entero)
 	}
 
 	Decimal, error := strconv.ParseFloat(ctx.GetText(), 64)
 	if error == nil {
-		return Decimal
+		return NewValue(Decimal, nil, nil, Decimal)
 	}
 
 	return false
@@ -376,12 +500,29 @@ func (v *Visitor) VisitNumberValor(ctx *parser.NumberValorContext) interface{} {
 
 func (v *Visitor) VisitBoolValor(ctx *parser.BoolValorContext) interface{} {
 	boleano, _ := strconv.ParseBool(ctx.GetText())
-	return boleano
+	return NewValue(nil, nil, nil, boleano)
 }
 
 func (v *Visitor) VisitStringValor(ctx *parser.StringValorContext) interface{} {
-	value := strings.Trim(ctx.GetText(), "\"")
-	return value
+	cadena := strings.Trim(ctx.GetText(), "\"")
+	NewTemp := ""
+	if !ControlString {
+		NewTemp = v.Traductor.NewTemp()
+		v.Traductor.Br()
+		v.Traductor.AddComentario("\t//Ingresando String")
+		v.Traductor.Br()
+		v.Traductor.Igual(NewTemp, "H", nil, nil)
+		byteArray := []byte(cadena)
+		for i := 0; i < len(byteArray); i++ {
+			v.Traductor.SetHeap("(int)H", strconv.Itoa(int(byteArray[i])))
+			v.Traductor.Contador("H", "H", "+", "1")
+		}
+		v.Traductor.SetHeap("(int)H", "-1")
+		v.Traductor.Contador("H", "H", "+", "1")
+		v.Traductor.Br()
+	}
+
+	return NewValue(NewTemp, nil, nil, cadena)
 }
 
 func (v *Visitor) VisitSinValor(ctx *parser.SinValorContext) interface{} {
@@ -404,8 +545,40 @@ func (v *Visitor) VisitOpAritmetico(ctx *parser.OpAritmeticoContext) interface{}
 	l := v.Visit(ctx.GetLeft())
 	r := v.Visit(ctx.GetRight())
 	op := ctx.GetOp().GetText()
-	ret := Proceso.NewConcatenar(l, r, op).Aritmeticos()
-	return ret
+
+	// iniciando traduciendo a C3D
+	NewTemp := v.Traductor.NewTemp()
+	if op == "+" {
+		v.Traductor.Igual(NewTemp, l.(Value).Temp, r.(Value).Temp, op)
+	} else if op == "-" {
+		v.Traductor.Igual(NewTemp, l.(Value).Temp, r.(Value).Temp, op)
+	} else if op == "*" {
+		v.Traductor.Igual(NewTemp, l.(Value).Temp, r.(Value).Temp, op)
+	} else if op == "/" {
+		NewLabel := v.Traductor.NewLabel()
+		v.Traductor.AddIf(fmt.Sprint(r.(Value).Temp), "0", "!=", NewLabel)
+		v.Traductor.AddPrint("77", "c")
+		v.Traductor.AddPrint("97", "c")
+		v.Traductor.AddPrint("116", "c")
+		v.Traductor.AddPrint("104", "c")
+		v.Traductor.AddPrint("69", "c")
+		v.Traductor.AddPrint("114", "c")
+		v.Traductor.AddPrint("114", "c")
+		v.Traductor.AddPrint("111", "c")
+		v.Traductor.AddPrint("114", "c")
+		NewLabel2 := v.Traductor.NewLabel()
+		v.Traductor.Igual(NewTemp, "0", "", "")
+		v.Traductor.AddGoto(NewLabel2)
+		v.Traductor.AddLabel(NewLabel)
+		v.Traductor.Igual(NewTemp, l.(Value).Temp, r.(Value).Temp, op)
+		v.Traductor.AddLabel(NewLabel2)
+	} else if op == "%" {
+		v.Traductor.Igual(NewTemp, "(int) "+fmt.Sprint(l.(Value).Temp), r.(Value).Temp, op)
+	}
+	// fin traduccion a C3D
+
+	ret := Proceso.NewConcatenar(l.(Value).Valor, r.(Value).Valor, op).Aritmeticos()
+	return NewValue(NewTemp, true, nil, ret)
 }
 
 func (v *Visitor) VisitParentexpr(ctx *parser.ParentexprContext) interface{} {
@@ -417,7 +590,36 @@ func (v *Visitor) VisitOpComparativo(ctx *parser.OpComparativoContext) interface
 	l := v.Visit(ctx.GetLeft())
 	r := v.Visit(ctx.GetRight())
 	op := ctx.GetOp().GetText()
-	return Proceso.NewConcatenar(l, r, op).Comparativos()
+
+	// inicio traducion a C3D
+	NewLabel1 := ""
+	NewLabel2 := ""
+
+	switch Es_AND_NOT {
+	case 1:
+		NewLabel1 = v.Traductor.NewLabel()
+		NewLabel2 = LabelAN
+		v.Traductor.AddIf(fmt.Sprint(l.(Value).Temp), fmt.Sprint(r.(Value).Temp), op, NewLabel1)
+		v.Traductor.AddGoto(NewLabel2)
+
+	case 2:
+		NewLabel1 = LabelAN
+		NewLabel2 = v.Traductor.NewLabel()
+		v.Traductor.AddIf(fmt.Sprint(l.(Value).Temp), fmt.Sprint(r.(Value).Temp), op, NewLabel1)
+		v.Traductor.AddGoto(NewLabel2)
+
+	default:
+		NewLabel1 = v.Traductor.NewLabel()
+		NewLabel2 = v.Traductor.NewLabel()
+		v.Traductor.AddIf(fmt.Sprint(l.(Value).Temp), fmt.Sprint(r.(Value).Temp), op, NewLabel1)
+		v.Traductor.AddGoto(NewLabel2)
+
+	}
+	// fin traduccion a C3D
+
+	TypeBoolC3D = 2
+	ret := Proceso.NewConcatenar(l.(Value).Valor, r.(Value).Valor, op).Comparativos()
+	return NewValue("", NewLabel1, NewLabel2, ret)
 }
 
 func (v *Visitor) VisitOpRelacional(ctx *parser.OpRelacionalContext) interface{} {
@@ -425,14 +627,74 @@ func (v *Visitor) VisitOpRelacional(ctx *parser.OpRelacionalContext) interface{}
 	l := v.Visit(ctx.GetLeft())
 	r := v.Visit(ctx.GetRight())
 	op := ctx.GetOp().GetText()
-	return Proceso.NewConcatenar(l, r, op).Relacionales()
+
+	// inicio traducion a C3D
+	NewLabel1 := ""
+	NewLabel2 := ""
+
+	switch Es_AND_NOT {
+	case 1:
+		NewLabel1 = v.Traductor.NewLabel()
+		NewLabel2 = LabelAN
+		v.Traductor.AddIf(fmt.Sprint(l.(Value).Temp), fmt.Sprint(r.(Value).Temp), op, NewLabel1)
+		v.Traductor.AddGoto(NewLabel2)
+
+	case 2:
+		NewLabel1 = LabelAN
+		NewLabel2 = v.Traductor.NewLabel()
+		v.Traductor.AddIf(fmt.Sprint(l.(Value).Temp), fmt.Sprint(r.(Value).Temp), op, NewLabel1)
+		v.Traductor.AddGoto(NewLabel2)
+
+	default:
+		NewLabel1 = v.Traductor.NewLabel()
+		NewLabel2 = v.Traductor.NewLabel()
+		v.Traductor.AddIf(fmt.Sprint(l.(Value).Temp), fmt.Sprint(r.(Value).Temp), op, NewLabel1)
+		v.Traductor.AddGoto(NewLabel2)
+
+	}
+	// fin traduccion a C3D
+
+	TypeBoolC3D = 2
+	ret := Proceso.NewConcatenar(l.(Value).Valor, r.(Value).Valor, op).Relacionales()
+
+	return NewValue(nil, NewLabel1, NewLabel2, ret)
 }
 
 func (v *Visitor) VisitOpLogico(ctx *parser.OpLogicoContext) interface{} {
-	l := v.Visit(ctx.GetLeft())
-	r := v.Visit(ctx.GetRight())
+	var l interface{}
+	var r interface{}
 	op := ctx.GetOp().GetText()
-	return Proceso.NewConcatenar(l, r, op).Logicos()
+
+	// Inicio Traduccion C3D
+	Label1 := ""
+	Label2 := ""
+	if op == "&&" {
+		v.Traductor.AddComentario("\t//Operador Logico AND")
+		l = v.Visit(ctx.GetLeft())
+		v.Traductor.AddLabel(l.(Value).Label1.(string))
+		Es_AND_NOT = 1
+		LabelAN = l.(Value).Label2.(string)
+		r = v.Visit(ctx.GetRight())
+		Label1 = r.(Value).Label1.(string)
+		Label2 = r.(Value).Label2.(string)
+		Es_AND_NOT = 0
+		LabelAN = ""
+	} else if op == "||" {
+		v.Traductor.AddComentario("\t//Operador Logico OR")
+		l = v.Visit(ctx.GetLeft())
+		v.Traductor.AddLabel(l.(Value).Label2.(string))
+		Es_AND_NOT = 2
+		LabelAN = l.(Value).Label1.(string)
+		r = v.Visit(ctx.GetRight())
+		Label1 = r.(Value).Label1.(string)
+		Label2 = r.(Value).Label2.(string)
+		Es_AND_NOT = 0
+		LabelAN = ""
+	}
+	// Fin Traduccion C3D
+
+	ret := Proceso.NewConcatenar(l.(Value).Valor, r.(Value).Valor, op).Logicos()
+	return NewValue(nil, Label1, Label2, ret)
 }
 func (v *Visitor) VisitOpLogicoNot(ctx *parser.OpLogicoNotContext) interface{} {
 	l := v.Visit(ctx.Expresion())
@@ -442,10 +704,97 @@ func (v *Visitor) VisitOpLogicoNot(ctx *parser.OpLogicoNotContext) interface{} {
 	return l
 }
 
+// Print
 func (v *Visitor) VisitPrint(ctx *parser.PrintContext) interface{} {
+
 	var Concatenar string = ""
 	for i := 0; ctx.Expresion(i) != nil; i++ {
-		Concatenar += fmt.Sprint(v.Visit(ctx.Expresion(i)))
+		Print := v.Visit(ctx.Expresion(i))
+		Valor := Print.(Value).Valor
+		Temp := Print.(Value).Temp
+
+		if Miceleanos.IsString(Valor) {
+			if len(Valor.(string)) < 2 {
+
+				v.Traductor.AddComentario("\t//Imprimir Character")
+				NewTemp := v.Traductor.NewTemp()
+				v.Traductor.GetHeap(NewTemp, "(int)"+fmt.Sprint(Temp))
+				v.Traductor.AddPrint("(char) "+NewTemp, "c")
+				v.Traductor.AddPrint("10", "c")
+				v.Traductor.Br()
+			} else {
+				v.Traductor.AddComentario("\t//Imprimir String")
+				NewTemp := v.Traductor.NewTemp()
+				NewTemp2 := v.Traductor.NewTemp()
+				v.Traductor.Igual(NewTemp, "P", v.EntornoActual.Size, "+")
+				v.Traductor.Contador(NewTemp, NewTemp, "+", "1")
+				v.Traductor.SetStack("(int)"+NewTemp, fmt.Sprint(Temp))
+				v.Traductor.Contador("P", "P", "+", fmt.Sprint(v.EntornoActual.Size))
+				v.Traductor.callVoid("ImprimirString")
+				v.Traductor.GetStack(NewTemp2, "(int)P")
+				v.Traductor.Contador("P", "P", "-", fmt.Sprint(v.EntornoActual.Size))
+				v.Traductor.AddPrint("10", "c")
+				v.Traductor.Br()
+				Print_String = true
+			}
+
+		} else if Miceleanos.IsInt(Valor) {
+			// C3D Imprimir entero
+			v.Traductor.AddComentario("\t//Imprimir Entero")
+			v.Traductor.AddPrint("(int) "+fmt.Sprint(Temp), "d")
+			v.Traductor.AddPrint("10", "c")
+			v.Traductor.Br()
+
+		} else if Miceleanos.IsFloat(Valor) {
+
+			// C3D Imprimir float
+			v.Traductor.AddComentario("\t//Imprimir Float")
+			v.Traductor.AddPrint("(float) "+fmt.Sprint(Temp), "f")
+			v.Traductor.AddPrint("10", "c")
+			v.Traductor.Br()
+
+		} else if Miceleanos.Isbool(Valor) {
+			// C3D Imprimir bool
+			v.Traductor.AddComentario("\t//Imprimir Bool")
+			NewLabel1 := ""
+			NewLabel2 := ""
+			switch TypeBoolC3D {
+			case 1:
+				NewLabel1 = v.Traductor.NewLabel()
+				NewLabel2 = v.Traductor.NewLabel()
+				v.Traductor.AddIf(fmt.Sprint(Temp), "1", "==", NewLabel1)
+				v.Traductor.AddGoto(NewLabel2)
+			case 2:
+				NewLabel1 = fmt.Sprint(Print.(Value).Label1)
+				NewLabel2 = fmt.Sprint(Print.(Value).Label2)
+			default:
+				NewLabel1 = v.Traductor.NewLabel()
+				NewLabel2 = v.Traductor.NewLabel()
+				if Valor.(bool) {
+					v.Traductor.AddGoto(NewLabel1)
+				} else {
+					v.Traductor.AddGoto(NewLabel2)
+				}
+
+			}
+			NewLabel3 := v.Traductor.NewLabel()
+			v.Traductor.AddLabel(NewLabel1)         // Lx:
+			v.Traductor.AddPrint("(char) 116", "c") // printf("%c", 116); // t
+			v.Traductor.AddPrint("(char) 114", "c") // printf("%c", 114); // r
+			v.Traductor.AddPrint("(char) 117", "c") // printf("%c", 117); // u
+			v.Traductor.AddPrint("(char) 101", "c") // printf("%c", 101); // e
+			v.Traductor.AddGoto(NewLabel3)          // goto Lx;
+			v.Traductor.AddLabel(NewLabel2)         // Lx:
+			v.Traductor.AddPrint("(char) 102", "c") // printf("%c", 102); // f
+			v.Traductor.AddPrint("(char) 97", "c")  // printf("%c", 97); // a
+			v.Traductor.AddPrint("(char) 108", "c") // printf("%c", 108); // l
+			v.Traductor.AddPrint("(char) 115", "c") // printf("%c", 115); // s
+			v.Traductor.AddPrint("(char) 101", "c") // printf("%c", 101); // e
+			v.Traductor.AddLabel(NewLabel3)         // Lx:
+			v.Traductor.AddPrint("10", "c")         // printf("%c", 10); // \n
+
+		}
+		Concatenar += fmt.Sprint(Valor)
 	}
 	// fmt.Println("CONSOLE: ", Concatenar)
 	Concatenar += "\n"
@@ -466,14 +815,35 @@ func (v *Visitor) VisitIdValor(ctx *parser.IdValorContext) interface{} {
 		})
 		return false
 	}
-	return value.Value
+	//Codigo en 3 direcciones
+	Temp := v.Traductor.NewTemp()
+	if value.Type == "Int" || value.Type == "Float" {
+		v.Traductor.AddComentario("\t//llamando una variable")
+		v.Traductor.GetStack(Temp, fmt.Sprint(value.Stack))
+		v.Traductor.Br()
+
+	} else if value.Type == "Bool" {
+		v.Traductor.AddComentario("\t//llamando una variable")
+		v.Traductor.GetStack(Temp, fmt.Sprint(value.Stack))
+		TypeBoolC3D = 1
+	} else if value.Type == "String" {
+		v.Traductor.AddComentario("\t//llamando una variable")
+		v.Traductor.GetStack(Temp, fmt.Sprint(value.Stack))
+		v.Traductor.Br()
+	} else if value.Type == "Character" {
+		v.Traductor.AddComentario("\t//llamando una variable")
+		v.Traductor.GetStack(Temp, fmt.Sprint(value.Stack))
+		v.Traductor.Br()
+	}
+	return NewValue(Temp, nil, nil, value.Value)
 }
 
 func (v *Visitor) VisitIf(ctx *parser.IfContext) interface{} {
-	EnIF = false
-	EnElseIf = false
 	RET_SET = false
-	condicion := v.Visit(ctx.Expresion())
+	v.Traductor.AddComentario("//------------------------------------")
+	v.Traductor.AddComentario("//Setencia IF")
+	Valor := v.Visit(ctx.Expresion())
+	condicion := Valor.(Value).Valor
 	if !Miceleanos.Isbool(condicion) {
 		v.ListErrores = append(v.ListErrores, &Miceleanos.ErrorAnalizador{
 			Fila:        ctx.Expresion().GetStart().GetLine(),
@@ -484,10 +854,143 @@ func (v *Visitor) VisitIf(ctx *parser.IfContext) interface{} {
 		})
 		return false
 	}
-	if !condicion.(bool) {
 
-		EnIF = true
-		v.EntornoActual = NewEntorno(v.EntornoActual, "If")
+	// inicio traduccion a C3D
+	LabelIf := Valor.(Value).Label1
+	LabelElse := ""
+	LabelDefault := ""
+	LabelAux := ""
+	if LabelIf == nil && Valor.(Value).Label2 == nil {
+		LabelIf = v.Traductor.NewLabel()
+		if condicion.(bool) {
+			v.Traductor.AddGoto(fmt.Sprint(LabelIf))
+			v.Traductor.AddLabel(fmt.Sprint(LabelIf))
+			LabelDefault = v.Traductor.NewLabel()
+			fmt.Println(LabelDefault)
+		} else {
+
+			LabelElse = v.Traductor.NewLabel()
+			v.Traductor.AddGoto(fmt.Sprint(LabelElse))
+			v.Traductor.AddLabel(fmt.Sprint(LabelIf))
+			LabelDefault = v.Traductor.NewLabel()
+			fmt.Println(LabelDefault)
+		}
+	} else {
+		v.Traductor.AddLabel(fmt.Sprint(LabelIf))
+		LabelDefault = v.Traductor.NewLabel()
+		LabelAux = Valor.(Value).Label2.(string)
+		fmt.Println(LabelDefault)
+	}
+
+	// fin traduccion a C3D
+	v.EntornoActual = NewEntorno(v.EntornoActual, "If")
+	for i := 0; ctx.Bloque().Lista_proceso(i) != nil; i++ {
+		value := v.Visit(ctx.Bloque().Lista_proceso(i))
+		if v.Break {
+			v.Break = false
+			v.EntornoActual = v.EntornoActual.Padre
+			return "break"
+		} else if v.Continue {
+			v.Continue = false
+			v.EntornoActual = v.EntornoActual.Padre
+			return "continue"
+		} else if v.EntornoActual.Retorno {
+			v.EntornoActual = v.EntornoActual.Padre
+			v.EntornoActual.Retorno = true
+			return value
+		}
+	}
+	v.EntornoActual = v.EntornoActual.Padre
+
+	for i := 0; ctx.Elseif_(i) != nil; i++ {
+		if i == 0 {
+			v.Traductor.AddGoto(fmt.Sprint(LabelDefault))
+			v.Traductor.AddLabel(LabelAux)
+		} else {
+			v.Traductor.AddLabel(LabelAN)
+		}
+		ResElif := v.Visit(ctx.Elseif_(i))
+		if ResElif == "break" {
+			return "break"
+		} else if ResElif == "continue" {
+			return "continue"
+		} else if RETVALORDEELSE {
+			RETVALORDEELSE = false
+			v.EntornoActual.Retorno = true
+			return ResElif
+		}
+		v.Traductor.AddGoto(fmt.Sprint(LabelDefault))
+	}
+	// inicio traduccion a C3D
+	// if !v.EntornoActual.Elseif {
+	// 	v.Traductor.AddGoto(fmt.Sprint(LabelAux))
+	// }
+
+	if ctx.Else_() != nil {
+		if v.EntornoActual.Elseif {
+			v.Traductor.AddComentario("//------------------------------------")
+			v.Traductor.AddComentario("//Setencia ELSE")
+			v.Traductor.AddLabel(LabelAN)
+		} else {
+			v.Traductor.AddGoto(fmt.Sprint(LabelDefault))
+			v.Traductor.AddComentario("//------------------------------------")
+			v.Traductor.AddComentario("//Setencia ELSE")
+			v.Traductor.AddLabel(LabelAux)
+		}
+		v.EntornoActual.Else = true
+		v.EntornoActual = NewEntorno(v.EntornoActual, "ELSE")
+		for i := 0; ctx.Else_().Bloque().Lista_proceso(i) != nil; i++ {
+			value := v.Visit(ctx.Else_().Bloque().Lista_proceso(i))
+			if v.Break {
+				v.Break = false
+				v.EntornoActual = v.EntornoActual.Padre
+				return "break"
+			} else if v.Continue {
+				v.Continue = false
+				v.EntornoActual = v.EntornoActual.Padre
+				return "continue"
+			} else if v.EntornoActual.Retorno {
+				v.EntornoActual = v.EntornoActual.Padre
+				return value
+			}
+
+		}
+		v.EntornoActual = v.EntornoActual.Padre
+	}
+	v.Traductor.AddComentario("//------------------------------------")
+	if !v.EntornoActual.Elseif && !v.EntornoActual.Else {
+		// Solo hay setencia if sin else ni elseif
+		LabelDefault = LabelAux
+		v.Traductor.AddLabel(fmt.Sprint(LabelDefault))
+	} else if v.EntornoActual.Elseif && !v.EntornoActual.Else {
+		// Solo hay setencia if con elseif
+		v.Traductor.AddLabel(LabelAN)
+		v.Traductor.AddLabel(fmt.Sprint(LabelDefault))
+		LabelAN = ""
+	} else if !v.EntornoActual.Elseif && v.EntornoActual.Else {
+		// Solo hay setencia if con else
+		v.Traductor.AddLabel(fmt.Sprint(LabelDefault))
+	} else if v.EntornoActual.Elseif && v.EntornoActual.Else {
+		// Tiene elseif y else
+		v.Traductor.AddLabel(fmt.Sprint(LabelDefault))
+	}
+
+	return nil
+}
+
+func (v *Visitor) VisitElseif_(ctx *parser.Elseif_Context) interface{} {
+	// inicio traduccion a C3D
+	v.EntornoActual.Elseif = true
+	v.Traductor.AddComentario("//-------------------------------------")
+	v.Traductor.AddComentario("//Setencia ELSEIF")
+	v.Traductor.Br()
+	condicion := v.Visit(ctx.Expresion())
+	LabelAN = ""
+	LabelSI := condicion.(Value).Label1
+	LabelAN = condicion.(Value).Label2.(string)
+	v.Traductor.AddLabel(fmt.Sprint(LabelSI))
+	if Miceleanos.Isbool(condicion.(Value).Valor) {
+		v.EntornoActual = NewEntorno(v.EntornoActual, "ElseIf")
 		for i := 0; ctx.Bloque().Lista_proceso(i) != nil; i++ {
 			value := v.Visit(ctx.Bloque().Lista_proceso(i))
 			if v.Break {
@@ -499,86 +1002,13 @@ func (v *Visitor) VisitIf(ctx *parser.IfContext) interface{} {
 				v.EntornoActual = v.EntornoActual.Padre
 				return "continue"
 			} else if v.EntornoActual.Retorno {
+				RETVALORDEELSE = true
 				v.EntornoActual = v.EntornoActual.Padre
-				v.EntornoActual.Retorno = true
 				return value
 			}
-
 		}
 		v.EntornoActual = v.EntornoActual.Padre
-	}
-	if EnIF {
-		return true
-	}
 
-	for i := 0; ctx.Elseif_(i) != nil; i++ {
-		ResElif := v.Visit(ctx.Elseif_(i))
-		if ResElif == "break" {
-			return "break"
-		} else if ResElif == "continue" {
-			return "continue"
-		} else if RETVALORDEELSE {
-			RETVALORDEELSE = false
-			v.EntornoActual.Retorno = true
-			return ResElif
-		}
-	}
-
-	if EnElseIf {
-		return true
-	}
-
-	if ctx.Else_() != nil {
-		if !condicion.(bool) {
-			v.EntornoActual = NewEntorno(v.EntornoActual, "ELSE")
-			for i := 0; ctx.Else_().Bloque().Lista_proceso(i) != nil; i++ {
-				value := v.Visit(ctx.Else_().Bloque().Lista_proceso(i))
-				if v.Break {
-					v.Break = false
-					v.EntornoActual = v.EntornoActual.Padre
-					return "break"
-				} else if v.Continue {
-					v.Continue = false
-					v.EntornoActual = v.EntornoActual.Padre
-					return "continue"
-				} else if v.EntornoActual.Retorno {
-					v.EntornoActual = v.EntornoActual.Padre
-					return value
-				}
-
-			}
-			v.EntornoActual = v.EntornoActual.Padre
-		}
-	}
-	return nil
-}
-
-func (v *Visitor) VisitElseif_(ctx *parser.Elseif_Context) interface{} {
-
-	condicion := v.Visit(ctx.Expresion())
-	if Miceleanos.Isbool(condicion) {
-
-		if condicion.(bool) {
-			EnElseIf = true
-			v.EntornoActual = NewEntorno(v.EntornoActual, "ElseIf")
-			for i := 0; ctx.Bloque().Lista_proceso(i) != nil; i++ {
-				value := v.Visit(ctx.Bloque().Lista_proceso(i))
-				if v.Break {
-					v.Break = false
-					v.EntornoActual = v.EntornoActual.Padre
-					return "break"
-				} else if v.Continue {
-					v.Continue = false
-					v.EntornoActual = v.EntornoActual.Padre
-					return "continue"
-				} else if v.EntornoActual.Retorno {
-					RETVALORDEELSE = true
-					v.EntornoActual = v.EntornoActual.Padre
-					return value
-				}
-			}
-			v.EntornoActual = v.EntornoActual.Padre
-		}
 	} else {
 		v.AddError(ctx.Expresion().GetStart().GetLine(), ctx.Expresion().GetStart().GetColumn(), "ELSEIF", "La condicion no es booleana", "SEMANTICO")
 		return false
@@ -589,29 +1019,33 @@ func (v *Visitor) VisitElseif_(ctx *parser.Elseif_Context) interface{} {
 
 func (v *Visitor) VisitSwitch(ctx *parser.SwitchContext) interface{} {
 	condicion := v.Visit(ctx.Expresion())
-	aux := false
+
+	v.Traductor.AddComentario("//-------------------------------------")
+	v.Traductor.AddComentario("//Setencia SWITCH")
+	v.Traductor.Br()
+	NewLabel3 := v.Traductor.NewLabel()
 	for i := 0; ctx.Caso(i) != nil; i++ {
-		NewSwitch := Proceso.NewSwitch(condicion, v.Visit(ctx.Caso(i).Expresion()))
-		if Miceleanos.Isbool(NewSwitch.IsEqual()) {
-			if NewSwitch.IsEqual().(bool) {
-				aux = true
-				v.EntornoActual = NewEntorno(v.EntornoActual, "Switch")
-				v.Visit(ctx.Caso(i))
-				v.EntornoActual = v.EntornoActual.Padre
-				break
-			}
-		} else {
-			NewError := NewSwitch.IsEqual().(Miceleanos.ErrorAnalizador)
-			v.AddError(NewError.Fila, NewError.Columna, NewError.Intruccion, NewError.Descripcion, NewError.Tipo)
-		}
+		// codigo en 3 direcciones
+		TypecCase := v.Visit(ctx.Caso(i).Expresion())
+		NewLabel := v.Traductor.NewLabel()
+		NewLabel2 := v.Traductor.NewLabel()
+		v.Traductor.AddIf(fmt.Sprint(condicion.(Value).Temp), fmt.Sprint(TypecCase.(Value).Temp), "==", NewLabel)
+		v.Traductor.AddGoto(NewLabel2)
+		v.Traductor.AddLabel(NewLabel)
+		v.EntornoActual = NewEntorno(v.EntornoActual, "Switch")
+		v.Visit(ctx.Caso(i))
+		v.EntornoActual = v.EntornoActual.Padre
+		v.Traductor.AddGoto(NewLabel3)
+
+		v.Traductor.AddLabel(NewLabel2)
+
 	}
 	if ctx.Default_() != nil {
-		if !aux {
-			v.EntornoActual = NewEntorno(v.EntornoActual, "Switch")
-			v.Visit(ctx.Default_())
-			v.EntornoActual = v.EntornoActual.Padre
-		}
+		v.EntornoActual = NewEntorno(v.EntornoActual, "Switch")
+		v.Visit(ctx.Default_())
+		v.EntornoActual = v.EntornoActual.Padre
 	}
+	v.Traductor.AddLabel(NewLabel3)
 
 	return false
 }
@@ -636,24 +1070,25 @@ func (v *Visitor) VisitDefault(ctx *parser.DefaultContext) interface{} {
 
 func (v *Visitor) VisitWhile(ctx *parser.WhileContext) interface{} {
 
-	condicion := v.Visit(ctx.Expresion())
-	if Miceleanos.Isbool(condicion) {
-	outerLoop:
-		for condicion.(bool) {
-			v.EntornoActual = NewEntorno(v.EntornoActual, "While")
-			for i := 0; ctx.Bloque().Lista_proceso(i) != nil; i++ {
-				ResW := v.Visit(ctx.Bloque().Lista_proceso(i))
-				if ResW == "break" {
-					break outerLoop
-				} else if ResW == "continue" {
-					condicion = v.Visit(ctx.Expresion())
-					continue outerLoop
-				}
-			}
+	v.Traductor.AddComentario("//-------------------------------------")
+	v.Traductor.AddComentario("//Setencia WHILE")
+	v.Traductor.Br()
+	NewLabel := v.Traductor.NewLabel()
+	v.Traductor.AddLabel(NewLabel)
+	Valor := v.Visit(ctx.Expresion())
+	LabelPassSI = NewLabel
+	LabelPassNo = Valor.(Value).Label2.(string)
+	condicion := Valor.(Value).Valor
+	if Miceleanos.Isbool(condicion.(bool)) {
+		v.Traductor.AddLabel(Valor.(Value).Label1.(string))
+		v.EntornoActual = NewEntorno(v.EntornoActual, "While")
+		for i := 0; ctx.Bloque().Lista_proceso(i) != nil; i++ {
+			v.Visit(ctx.Bloque().Lista_proceso(i))
 
-			condicion = v.Visit(ctx.Expresion())
-			v.EntornoActual = v.EntornoActual.Padre
 		}
+		v.EntornoActual = v.EntornoActual.Padre
+		v.Traductor.AddGoto(NewLabel)
+		v.Traductor.AddLabel(Valor.(Value).Label2.(string))
 	} else {
 		v.AddError(ctx.Expresion().GetStart().GetLine(), ctx.Expresion().GetStart().GetColumn(), "WHILE", "La condicion no es booleana", "SEMANTICO")
 	}
@@ -666,142 +1101,231 @@ func (v *Visitor) VisitWhile(ctx *parser.WhileContext) interface{} {
 //--------------------------------------   for
 
 func (v *Visitor) VisitFor(ctx *parser.ForContext) interface{} {
-	izq := v.Visit(ctx.GetLeft())
-	der := interface{}(nil)
+	izquierda := v.Visit(ctx.GetLeft())
+	derecha := interface{}(nil)
 	if ctx.GetRight() != nil {
-		der = v.Visit(ctx.GetRight())
+		derecha = v.Visit(ctx.GetRight())
 	}
 	var comprobacion bool = true
 	if ctx.GUION_BAJO() != nil {
 		comprobacion = false
 	}
+	v.Traductor.AddComentario("//-------------------------------------")
+	v.Traductor.AddComentario("//Setencia FOR")
 	if ctx.TRESPUNTOS() != nil {
-		if Miceleanos.IsInt(izq) && Miceleanos.IsInt(der) {
-			if izq.(int64) <= der.(int64) {
-				if comprobacion {
-					// for tipo 1
-					for izq.(int64) <= der.(int64) {
+		ValorIz := izquierda.(Value).Valor
+		TemporalIz := izquierda.(Value).Temp
+		TemporalDer := derecha.(Value).Temp
+		if comprobacion {
+			// fot tipo 1  [ valor in range ]
 
-						CreateSymbol := NewSimbolo(izq, "Int", "Let", false)
-						v.EntornoActual.EnvAddSimbolo(ctx.ID().GetText(), CreateSymbol)
-						v.EntornoActual = NewEntorno(v.EntornoActual, "For")
-						for i := 0; ctx.Bloque().Lista_proceso(i) != nil; i++ {
-							newReturn := v.Visit(ctx.Bloque().Lista_proceso(i))
-							if newReturn == false {
-								v.EntornoActual = v.EntornoActual.Padre
-								return false
-							}
-						}
-						izq = izq.(int64) + 1
-						v.EntornoActual.ActualizarSimbolo(ctx.ID().GetText(), NewSimbolo(izq, "Int", "Let", false))
-						v.EntornoActual = v.EntornoActual.Padre
-					}
-
-				} else {
-					// for tipo 2
-					for izq.(int64) <= der.(int64) {
-						v.EntornoActual = NewEntorno(v.EntornoActual, "For")
-						for i := 0; ctx.Bloque().Lista_proceso(i) != nil; i++ {
-							v.Visit(ctx.Bloque().Lista_proceso(i))
-						}
-						izq = izq.(int64) + 1
-						v.EntornoActual = v.EntornoActual.Padre
-					}
-
-				}
-
-			}
-		} else {
-			v.AddError(ctx.GetLeft().GetStart().GetLine(), ctx.GetLeft().GetStart().GetColumn(), "FOR", "Tipos valido Int()", "SEMANTICO")
-			return false
-		}
-
-	} else {
-		//buscar si es una cadena o un vector
-		Encontrado := v.EntornoActual.BuscarSimbolo(AuxPass.(string))
-		if Encontrado.Value != nil {
-			Tipo := Encontrado.Type
-			if Encontrado.EsVector {
-				List := Encontrado.Value.([]interface{})
-				v.EntornoActual = NewEntorno(v.EntornoActual, "For")
-				if Tipo == "Int" {
-					CreateSymbol := NewSimbolo(0, Tipo, "Let", false)
-					v.EntornoActual.EnvAddSimbolo(ctx.ID().GetText(), CreateSymbol)
-
-					for i := 0; i < len(List); i++ {
-						newi := List[i]
-						v.EntornoActual.ActualizarSimbolo(ctx.ID().GetText(), NewSimbolo(newi, Tipo, "Let", false))
-						for i := 0; ctx.Bloque().Lista_proceso(i) != nil; i++ {
-							v.Visit(ctx.Bloque().Lista_proceso(i))
-						}
-					}
-					v.EntornoActual = v.EntornoActual.Padre
-					return true
-				} else if Tipo == "Character" {
-					CreateSymbol := NewSimbolo("", Tipo, "Let", false)
-					v.EntornoActual.EnvAddSimbolo(ctx.ID().GetText(), CreateSymbol)
-
-					for i := 0; i < len(List); i++ {
-						newi := List[i]
-						v.EntornoActual.ActualizarSimbolo(ctx.ID().GetText(), NewSimbolo(newi, Tipo, "Let", false))
-						for i := 0; ctx.Bloque().Lista_proceso(i) != nil; i++ {
-							v.Visit(ctx.Bloque().Lista_proceso(i))
-						}
-					}
-					v.EntornoActual = v.EntornoActual.Padre
-					return true
-				} else if Tipo == "String" {
-					createSymbol := NewSimbolo("", Tipo, "Let", false)
-					v.EntornoActual.EnvAddSimbolo(ctx.ID().GetText(), createSymbol)
-
-					for i := 0; i < len(List); i++ {
-						newi := List[i]
-						v.EntornoActual.ActualizarSimbolo(ctx.ID().GetText(), NewSimbolo(newi, Tipo, "Let", false))
-						for i := 0; ctx.Bloque().Lista_proceso(i) != nil; i++ {
-							v.Visit(ctx.Bloque().Lista_proceso(i))
-						}
-					}
-					v.EntornoActual = v.EntornoActual.Padre
-					return true
-				} else if Tipo == "Float" {
-					createSymbol := NewSimbolo("", Tipo, "Let", false)
-					v.EntornoActual.EnvAddSimbolo(ctx.ID().GetText(), createSymbol)
-
-					for i := 0; i < len(List); i++ {
-						newi := List[i]
-						v.EntornoActual.ActualizarSimbolo(ctx.ID().GetText(), NewSimbolo(newi, Tipo, "Let", false))
-						for i := 0; ctx.Bloque().Lista_proceso(i) != nil; i++ {
-							v.Visit(ctx.Bloque().Lista_proceso(i))
-						}
-					}
-					v.EntornoActual = v.EntornoActual.Padre
-					return true
-				}
-			}
-		}
-
-		if Miceleanos.IsString(izq) {
-			v.EntornoActual = NewEntorno(v.EntornoActual, "For")
-			CreateSymbol := NewSimbolo("0", "Character", "Let", false)
+			CreateSymbol := NewSimbolo(ValorIz, "Int", "Let", false)
 			v.EntornoActual.EnvAddSimbolo(ctx.ID().GetText(), CreateSymbol)
-			for i := 0; i < len(izq.(string)); i++ {
-				newi := string(izq.(string)[i])
-				v.EntornoActual.ActualizarSimbolo(ctx.ID().GetText(), NewSimbolo(newi, "Character", "Let", false))
-				for i := 0; ctx.Bloque().Lista_proceso(i) != nil; i++ {
-					NewReturn := v.Visit(ctx.Bloque().Lista_proceso(i))
-					if NewReturn == false {
-						v.EntornoActual = v.EntornoActual.Padre
-						return false
-					}
+
+			// Inicio Codigo en 3 direcciones
+			v.Traductor.AddComentario("\t//Declaracion variable de control")
+			NewStack := v.Traductor.GetIndex()
+			v.Traductor.SetStack(fmt.Sprint(NewStack), fmt.Sprint(TemporalIz))
+			v.EntornoActual.ActualizarStack(ctx.ID().GetText(), NewStack)
+			LabelCiclo := v.Traductor.NewLabel()
+			LabelSi := v.Traductor.NewLabel()
+			LabelNo := v.Traductor.NewLabel()
+			v.Traductor.AddLabel(LabelCiclo)
+			NewTemp := v.Traductor.NewTemp()
+			v.Traductor.GetStack(NewTemp, fmt.Sprint(NewStack))
+			v.Traductor.AddIf(NewTemp, fmt.Sprint(TemporalDer), "<=", LabelSi)
+			v.Traductor.AddGoto(LabelNo)
+			v.Traductor.AddLabel(LabelSi)
+			v.EntornoActual = NewEntorno(v.EntornoActual, "For")
+			for i := 0; ctx.Bloque().Lista_proceso(i) != nil; i++ {
+				newReturn := v.Visit(ctx.Bloque().Lista_proceso(i))
+				if newReturn == false {
+					v.EntornoActual = v.EntornoActual.Padre
+					return false
 				}
 			}
 			v.EntornoActual = v.EntornoActual.Padre
+			NewTemp2 := v.Traductor.NewTemp()
+			v.Traductor.GetStack(NewTemp2, fmt.Sprint(NewStack))
+			v.Traductor.Contador(NewTemp2, NewTemp2, "+", "1")
+			v.Traductor.SetStack(fmt.Sprint(NewStack), NewTemp2)
+			v.Traductor.AddGoto(LabelCiclo)
+			v.Traductor.AddLabel(LabelNo)
+			// fin codigo en 3 direcciones
+
 		} else {
-			v.AddError(ctx.GetLeft().GetStart().GetLine(), ctx.GetLeft().GetStart().GetColumn(), "FOR", "EL TIPO ES INVALIDO", "SEMANTICO")
-			return false
+			// for tipo 2  [   _ ... range  ]
+
+			// inicio codigo en 3 direcciones
+			LabelCiclo := v.Traductor.NewLabel()
+			LabelSi := v.Traductor.NewLabel()
+			LabelNo := v.Traductor.NewLabel()
+			NewTemp := v.Traductor.NewTemp()
+			v.Traductor.Igual(NewTemp, fmt.Sprint(ValorIz), nil, nil)
+			v.Traductor.AddLabel(LabelCiclo)
+			v.Traductor.AddIf(NewTemp, fmt.Sprint(TemporalDer), "<=", LabelSi)
+			v.Traductor.AddGoto(LabelNo)
+			v.Traductor.AddLabel(LabelSi)
+			v.EntornoActual = NewEntorno(v.EntornoActual, "For")
+			for i := 0; ctx.Bloque().Lista_proceso(i) != nil; i++ {
+				v.Visit(ctx.Bloque().Lista_proceso(i))
+			}
+			v.EntornoActual = v.EntornoActual.Padre
+			v.Traductor.Contador(NewTemp, NewTemp, "+", "1")
+			v.Traductor.AddGoto(LabelCiclo)
+			v.Traductor.AddLabel(LabelNo)
+			// fin codigo en 3 direcciones
+		}
+	} else {
+
+		// for  tipo 3  [ valor  in  "string" ]
+		if AuxPass == nil {
+			AuxPass = ""
 		}
 
+		SearchSymbol := v.EntornoActual.BuscarSimbolo(AuxPass.(string))
+		fmt.Println(SearchSymbol)
+
+		if SearchSymbol.Value != nil || AuxPass == "" {
+			ValorIz := izquierda.(Value).Valor
+			TemporalIz := izquierda.(Value).Temp
+
+			if !SearchSymbol.EsVector {
+				if Miceleanos.IsString(ValorIz) || SearchSymbol.Type == "String" {
+					CreateSymbol := NewSimbolo("0", "Character", "Let", false)
+					v.EntornoActual.EnvAddSimbolo(ctx.ID().GetText(), CreateSymbol)
+
+					v.Traductor.AddComentario("\t//Declaracion variable de control")
+					NewStack := v.Traductor.GetIndex()
+					v.Traductor.SetStack(fmt.Sprint(NewStack), fmt.Sprint(TemporalIz))
+					v.EntornoActual.ActualizarStack(ctx.ID().GetText(), NewStack)
+
+					NewTempSize := v.Traductor.NewTemp()
+					LenString := len(ValorIz.(string))
+					v.Traductor.Igual(NewTempSize, fmt.Sprint(TemporalIz), fmt.Sprint(LenString), "+")
+					LabelCiclo := v.Traductor.NewLabel()
+					LabelSi := v.Traductor.NewLabel()
+					LabelNo := v.Traductor.NewLabel()
+					v.Traductor.AddLabel(LabelCiclo)
+					NewTemp := v.Traductor.NewTemp()
+					v.Traductor.GetStack(NewTemp, fmt.Sprint(NewStack))
+					v.Traductor.AddIf(NewTemp, fmt.Sprint(NewTempSize), "<", LabelSi)
+					v.Traductor.AddGoto(LabelNo)
+					v.Traductor.AddLabel(LabelSi)
+					v.EntornoActual = NewEntorno(v.EntornoActual, "For")
+					for i := 0; ctx.Bloque().Lista_proceso(i) != nil; i++ {
+						v.Visit(ctx.Bloque().Lista_proceso(i))
+					}
+					v.EntornoActual = v.EntornoActual.Padre
+					NewTemp2 := v.Traductor.NewTemp()
+					v.Traductor.GetStack(NewTemp2, fmt.Sprint(NewStack))
+					v.Traductor.Contador(NewTemp2, NewTemp2, "+", "1")
+					v.Traductor.SetStack(fmt.Sprint(NewStack), NewTemp2)
+					v.Traductor.AddGoto(LabelCiclo)
+					v.Traductor.AddLabel(LabelNo)
+					AuxPass = nil
+
+				} else {
+					v.AddError(ctx.GetStart().GetLine(), ctx.GetStart().GetColumn(), "FOR", "No es de tipo String", "SEMANTICO")
+					return false
+				}
+
+			} else {
+				fmt.Println("VECTOR")
+			}
+
+		} else {
+			v.AddError(ctx.GetStart().GetLine(), ctx.GetStart().GetColumn(), "FOR", "La variable no existe", "SEMANTICO")
+			return false
+		}
 	}
+
+	// } else {
+	// 	//buscar si es una cadena o un vector
+	// 	Encontrado := v.EntornoActual.BuscarSimbolo(AuxPass.(string))
+	// 	if Encontrado.Value != nil {
+	// 		Tipo := Encontrado.Type
+	// 		if Encontrado.EsVector {
+	// 			List := Encontrado.Value.([]interface{})
+	// 			v.EntornoActual = NewEntorno(v.EntornoActual, "For")
+	// 			if Tipo == "Int" {
+	// 				CreateSymbol := NewSimbolo(0, Tipo, "Let", false)
+	// 				v.EntornoActual.EnvAddSimbolo(ctx.ID().GetText(), CreateSymbol)
+
+	// 				for i := 0; i < len(List); i++ {
+	// 					newi := List[i]
+	// 					v.EntornoActual.ActualizarSimbolo(ctx.ID().GetText(), NewSimbolo(newi, Tipo, "Let", false))
+	// 					for i := 0; ctx.Bloque().Lista_proceso(i) != nil; i++ {
+	// 						v.Visit(ctx.Bloque().Lista_proceso(i))
+	// 					}
+	// 				}
+	// 				v.EntornoActual = v.EntornoActual.Padre
+	// 				return true
+	// 			} else if Tipo == "Character" {
+	// 				CreateSymbol := NewSimbolo("", Tipo, "Let", false)
+	// 				v.EntornoActual.EnvAddSimbolo(ctx.ID().GetText(), CreateSymbol)
+
+	// 				for i := 0; i < len(List); i++ {
+	// 					newi := List[i]
+	// 					v.EntornoActual.ActualizarSimbolo(ctx.ID().GetText(), NewSimbolo(newi, Tipo, "Let", false))
+	// 					for i := 0; ctx.Bloque().Lista_proceso(i) != nil; i++ {
+	// 						v.Visit(ctx.Bloque().Lista_proceso(i))
+	// 					}
+	// 				}
+	// 				v.EntornoActual = v.EntornoActual.Padre
+	// 				return true
+	// 			} else if Tipo == "String" {
+	// 				createSymbol := NewSimbolo("", Tipo, "Let", false)
+	// 				v.EntornoActual.EnvAddSimbolo(ctx.ID().GetText(), createSymbol)
+
+	// 				for i := 0; i < len(List); i++ {
+	// 					newi := List[i]
+	// 					v.EntornoActual.ActualizarSimbolo(ctx.ID().GetText(), NewSimbolo(newi, Tipo, "Let", false))
+	// 					for i := 0; ctx.Bloque().Lista_proceso(i) != nil; i++ {
+	// 						v.Visit(ctx.Bloque().Lista_proceso(i))
+	// 					}
+	// 				}
+	// 				v.EntornoActual = v.EntornoActual.Padre
+	// 				return true
+	// 			} else if Tipo == "Float" {
+	// 				createSymbol := NewSimbolo("", Tipo, "Let", false)
+	// 				v.EntornoActual.EnvAddSimbolo(ctx.ID().GetText(), createSymbol)
+
+	// 				for i := 0; i < len(List); i++ {
+	// 					newi := List[i]
+	// 					v.EntornoActual.ActualizarSimbolo(ctx.ID().GetText(), NewSimbolo(newi, Tipo, "Let", false))
+	// 					for i := 0; ctx.Bloque().Lista_proceso(i) != nil; i++ {
+	// 						v.Visit(ctx.Bloque().Lista_proceso(i))
+	// 					}
+	// 				}
+	// 				v.EntornoActual = v.EntornoActual.Padre
+	// 				return true
+	// 			}
+	// 		}
+	// 	}
+
+	// 	if Miceleanos.IsString(izq) {
+	// 		v.EntornoActual = NewEntorno(v.EntornoActual, "For")
+	// 		CreateSymbol := NewSimbolo("0", "Character", "Let", false)
+	// 		v.EntornoActual.EnvAddSimbolo(ctx.ID().GetText(), CreateSymbol)
+	// 		for i := 0; i < len(izq.(string)); i++ {
+	// 			newi := string(izq.(string)[i])
+	// 			v.EntornoActual.ActualizarSimbolo(ctx.ID().GetText(), NewSimbolo(newi, "Character", "Let", false))
+	// 			for i := 0; ctx.Bloque().Lista_proceso(i) != nil; i++ {
+	// 				NewReturn := v.Visit(ctx.Bloque().Lista_proceso(i))
+	// 				if NewReturn == false {
+	// 					v.EntornoActual = v.EntornoActual.Padre
+	// 					return false
+	// 				}
+	// 			}
+	// 		}
+	// 		v.EntornoActual = v.EntornoActual.Padre
+	// 	} else {
+	// 		v.AddError(ctx.GetLeft().GetStart().GetLine(), ctx.GetLeft().GetStart().GetColumn(), "FOR", "EL TIPO ES INVALIDO", "SEMANTICO")
+	// 		return false
+	// 	}
+
+	// }
 
 	return true
 }
@@ -811,22 +1335,37 @@ func (v *Visitor) VisitFor(ctx *parser.ForContext) interface{} {
 //--------------------------------------   Guard
 
 func (v *Visitor) VisitGuard(ctx *parser.GuardContext) interface{} {
-
+	v.Traductor.AddComentario("//-------------------------------------")
+	v.Traductor.AddComentario("//Setencia GUARD")
 	condicion := v.Visit(ctx.Expresion())
-	if Miceleanos.Isbool(condicion) {
-		if !condicion.(bool) {
-			v.EntornoActual = NewEntorno(v.EntornoActual, "Guard")
-			for i := 0; ctx.Lista_proceso(i) != nil; i++ {
-				v.Visit(ctx.Lista_proceso(i))
-				if v.Continue {
-					v.Continue = false
-					v.EntornoActual = v.EntornoActual.Padre
-					return "continue"
-				}
+	BoolSi := condicion.(Value).Label1
+	BoolNo := condicion.(Value).Label2
+	fmt.Println(BoolSi, BoolNo)
+	if Miceleanos.Isbool(condicion.(Value).Valor) {
+		v.Traductor.AddLabel(BoolNo.(string))
+		v.EntornoActual = NewEntorno(v.EntornoActual, "Guard")
+		for i := 0; ctx.Lista_proceso(i) != nil; i++ {
+			value := v.Visit(ctx.Lista_proceso(i))
+			if value == "continue" {
+				v.Traductor.Br()
+				v.Traductor.AddComentario("\t//-----------------------")
+				v.Traductor.AddComentario("\t//control CONTINUE")
+				v.Traductor.AddGoto(LabelPassSI)
+				v.Traductor.Br()
+				LabelPassSI = ""
+			} else if value == "break" {
+				v.Traductor.Br()
+				v.Traductor.AddComentario("\t//-----------------------")
+				v.Traductor.AddComentario("\t//control BREAK")
+				v.Traductor.AddGoto(LabelPassNo)
+				v.Traductor.Br()
+				LabelPassNo = ""
 			}
-			v.EntornoActual = v.EntornoActual.Padre
 
 		}
+		v.EntornoActual = v.EntornoActual.Padre
+		v.Traductor.AddLabel(BoolSi.(string))
+
 	} else {
 		v.AddError(ctx.Expresion().GetStart().GetLine(), ctx.Expresion().GetStart().GetColumn(), "GUARD", "La condicion no es booleana", "SEMANTICO")
 		return false
@@ -839,17 +1378,29 @@ func (v *Visitor) VisitGuard(ctx *parser.GuardContext) interface{} {
 // -------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------   Vector
 func (v *Visitor) VisitDec_vector(ctx *parser.Dec_vectorContext) interface{} {
+
 	NuevoVector := Proceso.NewVector()
 	NuevoVector.TipoVariable = ctx.GetOp().GetText()
 	NuevoVector.Id = ctx.ID().GetText()
 	NuevoVector.TipoDate = ctx.Tipo().GetText()
+
+	v.Traductor.AddComentario("//-------------------------------------")
+	v.Traductor.AddComentario("//Declaracion de Vector")
+	NewTemp := v.Traductor.NewTemp()
+	v.Traductor.Igual(NewTemp, "H", nil, nil)
 	for i := 0; ctx.Expresion(i) != nil; i++ {
 		valor := v.Visit(ctx.Expresion(i))
+		valor = valor.(Value).Valor
 		correcto := NuevoVector.VectorAppend(valor)
 		if !correcto {
 			v.AddError(ctx.Expresion(i).GetStart().GetLine(), ctx.Expresion(i).GetStart().GetColumn(), "VECTOR", "Tipo esperado: "+NuevoVector.TipoDate, "SEMANTICO")
 			return false
 		}
+		if ctx.Tipo().GetText() == "Int" {
+			v.Traductor.SetHeap("(int)H", fmt.Sprint(valor))
+			v.Traductor.Contador("H", "H", "+", "1")
+		}
+
 	}
 
 	CreateSymbol := NewSimbolo(NuevoVector.GetList(), NuevoVector.GetTipo(), NuevoVector.GetTipoVariable(), true)
@@ -857,6 +1408,16 @@ func (v *Visitor) VisitDec_vector(ctx *parser.Dec_vectorContext) interface{} {
 	if Is_correct {
 		TaGlobal := NewSimbGlobal("Vector", NuevoVector.GetTipo(), v.EntornoActual.GetEntorno(), ctx.ID().GetSymbol().GetLine(), ctx.ID().GetSymbol().GetColumn())
 		v.AddGlobalSimbol(NuevoVector.GetId(), TaGlobal)
+
+		v.Traductor.SetHeap("(int)H", fmt.Sprint(-1))
+		v.Traductor.Contador("H", "H", "+", "1")
+
+		NewStack := v.Traductor.GetIndex()
+		v.Traductor.Br()
+		v.Traductor.SetStack(fmt.Sprint(NewStack), fmt.Sprint(NewTemp))
+		v.Traductor.Br()
+		v.EntornoActual.ActualizarStack(NuevoVector.GetId(), NewStack)
+
 	} else {
 		v.AddError(ctx.ID().GetSymbol().GetLine(), ctx.ID().GetSymbol().GetColumn(), "VECTOR", "Ya existe en el entorno actual: "+NuevoVector.GetId(), "SEMANTICO")
 		return false
@@ -992,7 +1553,7 @@ func (v *Visitor) VisitVectorCount(ctx *parser.VectorCountContext) interface{} {
 		CountVector.Id = Id
 		CountVector.TipoVariable = Encontrado.TypeValue
 	}
-	return CountVector.Count()
+	return NewValue(nil, nil, nil, CountVector.Count())
 }
 
 func (v *Visitor) VisitVectorVacio(ctx *parser.VectorVacioContext) interface{} {
@@ -1163,5 +1724,15 @@ func (v *Visitor) VisitCasteo(ctx *parser.CasteoContext) interface{} {
 
 func (v *Visitor) VisitEstructs(ctx *parser.EstructsContext) interface{} {
 	fmt.Println("Estruct reconocido")
+	return true
+}
+
+func (v *Visitor) VisitComentarios(ctx *parser.ComentariosContext) interface{} {
+	if ctx.COMMENT() != nil {
+		v.Traductor.List_Process = append(v.Traductor.List_Process, ctx.COMMENT().GetText()+"\n")
+	}
+	if ctx.COMMENT_MULT() != nil {
+		v.Traductor.List_Process = append(v.Traductor.List_Process, ctx.COMMENT_MULT().GetText()+"\n")
+	}
 	return true
 }

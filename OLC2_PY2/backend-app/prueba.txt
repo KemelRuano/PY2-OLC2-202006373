@@ -1,0 +1,10 @@
+
+// var vec1: [Int] = [10,20,30,40,50]
+// print(vec1.count)
+
+
+print("hola")
+
+
+
+

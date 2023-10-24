@@ -7,6 +7,11 @@ type Entorno struct {
 	TableFunction map[string]Function
 	Ambito        string
 	Retorno       bool
+	Size          int
+	If            bool
+	Elseif        bool
+	Else          bool
+	ControlBucle  bool
 }
 
 func NewEntorno(parent *Entorno, ambito string) *Entorno {
@@ -15,6 +20,11 @@ func NewEntorno(parent *Entorno, ambito string) *Entorno {
 		TablaSimbolo:  make(map[string]Simbolo),
 		TableFunction: make(map[string]Function),
 		Ambito:        ambito,
+		Size:          0,
+		If:            false,
+		Elseif:        false,
+		Else:          false,
+		ControlBucle:  false,
 	}
 }
 
@@ -26,6 +36,7 @@ func (e *Entorno) EnvAddSimbolo(id string, value Simbolo) bool {
 		return false
 	} else {
 		e.TablaSimbolo[id] = value
+		e.Size++
 	}
 	return true
 }
@@ -87,4 +98,15 @@ func FuncionVacio(s Function) bool {
 		return false
 	}
 	return true
+}
+
+func (e *Entorno) ActualizarStack(id string, a int) {
+	for entorno := e; entorno != nil; entorno = entorno.Padre {
+		En, ok := entorno.TablaSimbolo[id]
+		if ok {
+			En.Stack = a
+			entorno.TablaSimbolo[id] = En
+			return
+		}
+	}
 }

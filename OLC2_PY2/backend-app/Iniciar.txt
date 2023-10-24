@@ -1,6 +1,3 @@
 go get github.com/antlr4-go/antlr/v4
 
-java -jar C:\Javalib\antlr-4.13.0-complete.jar -Dlanguage=Go -o C:\Users\LENOVO\Desktop\OLC2_PY2\backend-app\parser -package parser  -visitor C:\Users\LENOVO\Desktop\OLC2_PY2\backend-app\grammar\Sintax.g4
-
-
-java -jar C:\Javalib\antlr-4.13.0-complete.jar -Dlanguage=Go -o C:\Users\LENOVO\Desktop\OLC2_PY1\backend-app\parser -package parser  -no-listener -visitor C:\Users\LENOVO\Desktop\OLC2_PY1\backend-app\grammar\Sintax.g4
+java -jar C:\Javalib\antlr-4.13.0-complete.jar -Dlanguage=Go -o C:\Users\LENOVO\Desktop\PY2-OLC2-202006373\OLC2_PY2\backend-app\parser  -package parser  -no-listener    -visitor C:\Users\LENOVO\Desktop\PY2-OLC2-202006373\OLC2_PY2\backend-app\gramatica\Sintax.g4

@@ -1,4 +1,4 @@
-// Code generated from C:\Users\LENOVO\Desktop\OLC2_PY1\backend-app\grammar\Sintax.g4 by ANTLR 4.13.0. DO NOT EDIT.
+// Code generated from C:\Users\LENOVO\Desktop\PY2-OLC2-202006373\OLC2_PY2\backend-app\gramatica\Sintax.g4 by ANTLR 4.13.0. DO NOT EDIT.
 
 package parser // Sintax
 import "github.com/antlr4-go/antlr/v4"
@@ -16,17 +16,20 @@ type SintaxVisitor interface {
 	// Visit a parse tree produced by SintaxParser#lista_proceso.
 	VisitLista_proceso(ctx *Lista_procesoContext) interface{}
 
+	// Visit a parse tree produced by SintaxParser#comentarios.
+	VisitComentarios(ctx *ComentariosContext) interface{}
+
 	// Visit a parse tree produced by SintaxParser#retornar.
 	VisitRetornar(ctx *RetornarContext) interface{}
 
 	// Visit a parse tree produced by SintaxParser#declaracion.
 	VisitDeclaracion(ctx *DeclaracionContext) interface{}
 
-	// Visit a parse tree produced by SintaxParser#asigtipo1.
-	VisitAsigtipo1(ctx *Asigtipo1Context) interface{}
+	// Visit a parse tree produced by SintaxParser#DeclaracionTipo.
+	VisitDeclaracionTipo(ctx *DeclaracionTipoContext) interface{}
 
-	// Visit a parse tree produced by SintaxParser#asigtipo2.
-	VisitAsigtipo2(ctx *Asigtipo2Context) interface{}
+	// Visit a parse tree produced by SintaxParser#DeclaracionTipoImplicito.
+	VisitDeclaracionTipoImplicito(ctx *DeclaracionTipoImplicitoContext) interface{}
 
 	// Visit a parse tree produced by SintaxParser#asignacion.
 	VisitAsignacion(ctx *AsignacionContext) interface{}

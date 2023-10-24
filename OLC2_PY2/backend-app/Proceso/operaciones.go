@@ -29,6 +29,9 @@ func (c *Concatenar) Aritmeticos() interface{} {
 		case "*":
 			return c.derecha.(int64) * c.izquierda.(int64)
 		case "/":
+			if c.derecha.(int64) != 0 && c.izquierda.(int64) == 0 {
+				return "-1"
+			}
 			return c.derecha.(int64) / c.izquierda.(int64)
 		case "%":
 			return c.derecha.(int64) % c.izquierda.(int64)

@@ -17,7 +17,11 @@ lista_proceso: declaracion
               | funcLLamada 
               | retornar
               | estructs
+              | comentarios
              ;  
+comentarios: COMMENT
+            | COMMENT_MULT
+            ;
 retornar : RETURN (expresion)? 
          | BREAK
          | CONTINUE
@@ -28,8 +32,8 @@ declaracion: dec_tipo_valor
           | dec_vector
           | dec_vector_V_C
           ;
-dec_tipo_valor: op=(VAR|LET) ID  DOSPUNTOS tipo (IGUAL)?  expresion # asigtipo1;
-dec_valor: op=(VAR|LET) ID IGUAL expresion #asigtipo2;
+dec_tipo_valor: op=(VAR|LET) ID  DOSPUNTOS tipo (IGUAL)?  expresion # DeclaracionTipo;
+dec_valor: op=(VAR|LET) ID IGUAL expresion #DeclaracionTipoImplicito;
 
 asignacion: asignacionVariable
           | asignacionVector

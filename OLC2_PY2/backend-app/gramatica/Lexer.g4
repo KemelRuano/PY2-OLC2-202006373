@@ -1,4 +1,4 @@
-grammar Lexer;
+lexer grammar Lexer;
 
 // Datos primitivos
 INT: 'Int';
@@ -94,7 +94,13 @@ CARACTER: '"'~["]'"';
 SINVALOR: '?';
 
 ID: [a-zA-Z_][a-zA-Z_0-9]* ;
-COMMENT: '//' ~[\r\n]* -> skip;
-COMMENT_MULT: '/*' .*? '*/' -> skip;
+COMMENT: '//' ~[\r\n]* ;
+COMMENT_MULT: '/*' .*? '*/';
 WS: [ \t\r\n\f]+ -> skip;
+
+
+
+
+
+
 

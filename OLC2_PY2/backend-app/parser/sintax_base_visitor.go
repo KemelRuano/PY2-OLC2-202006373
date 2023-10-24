@@ -1,4 +1,4 @@
-// Code generated from C:\Users\LENOVO\Desktop\OLC2_PY1\backend-app\grammar\Sintax.g4 by ANTLR 4.13.0. DO NOT EDIT.
+// Code generated from C:\Users\LENOVO\Desktop\PY2-OLC2-202006373\OLC2_PY2\backend-app\gramatica\Sintax.g4 by ANTLR 4.13.0. DO NOT EDIT.
 
 package parser // Sintax
 import "github.com/antlr4-go/antlr/v4"
@@ -19,6 +19,10 @@ func (v *BaseSintaxVisitor) VisitLista_proceso(ctx *Lista_procesoContext) interf
 	return v.VisitChildren(ctx)
 }
 
+func (v *BaseSintaxVisitor) VisitComentarios(ctx *ComentariosContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
 func (v *BaseSintaxVisitor) VisitRetornar(ctx *RetornarContext) interface{} {
 	return v.VisitChildren(ctx)
 }
@@ -27,11 +31,11 @@ func (v *BaseSintaxVisitor) VisitDeclaracion(ctx *DeclaracionContext) interface{
 	return v.VisitChildren(ctx)
 }
 
-func (v *BaseSintaxVisitor) VisitAsigtipo1(ctx *Asigtipo1Context) interface{} {
+func (v *BaseSintaxVisitor) VisitDeclaracionTipo(ctx *DeclaracionTipoContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
-func (v *BaseSintaxVisitor) VisitAsigtipo2(ctx *Asigtipo2Context) interface{} {
+func (v *BaseSintaxVisitor) VisitDeclaracionTipoImplicito(ctx *DeclaracionTipoImplicitoContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 

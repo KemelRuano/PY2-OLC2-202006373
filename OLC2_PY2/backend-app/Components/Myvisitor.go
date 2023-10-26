@@ -13,8 +13,12 @@ import (
 )
 
 // Variables de manejo en C3D
+
+// manejo funciones nativas
 var Print_String = false
-var Concat_String = false
+var CopiarHeap = false
+var Control_Count = false
+
 var TypeBoolC3D int = 0
 var ControlString = false
 
@@ -100,9 +104,13 @@ func (v *Visitor) VisitLista(ctx *parser.ListaContext) interface{} {
 	if Print_String {
 		v.Traductor.List_funciones = append(v.Traductor.List_funciones, v.Traductor.PrimitiveString())
 	}
-	if Concat_String {
+	if CopiarHeap {
 		v.Traductor.List_funciones = append(v.Traductor.List_funciones, v.Traductor.PrimiteConcatString())
 	}
+	if Control_Count {
+		v.Traductor.List_funciones = append(v.Traductor.List_funciones, v.Traductor.VectorCount())
+	}
+
 	return true
 }
 
@@ -403,7 +411,7 @@ func (v *Visitor) VisitAsignacionVariable(ctx *parser.AsignacionVariableContext)
 					newExpresion = v.Visit(ctx.Expresion())
 					v.Traductor.SetStack(fmt.Sprint(Encontrado.Stack), fmt.Sprint(newExpresion.(Value).Temp))
 				} else if ctx.GetOp().GetText() == "+=" {
-					Concat_String = true
+					CopiarHeap = true
 					ControlString = true
 					newExpresion = v.Visit(ctx.Expresion())
 					NewString := newExpresion.(Value).Valor.(string)
@@ -432,7 +440,7 @@ func (v *Visitor) VisitAsignacionVariable(ctx *parser.AsignacionVariableContext)
 					v.Traductor.Igual(NewTemp4, NewTemp4, "1", "+")
 					v.Traductor.SetStack("(int) "+fmt.Sprint(NewTemp4), NewTemp2)
 					v.Traductor.Igual("P", "P", v.EntornoActual.Size, "+")
-					v.Traductor.callVoid("ConcatenarString")
+					v.Traductor.callVoid("CopiarHeap")
 					v.Traductor.Igual("P", "P", v.EntornoActual.Size, "-")
 					v.Traductor.Br()
 
@@ -793,6 +801,52 @@ func (v *Visitor) VisitPrint(ctx *parser.PrintContext) interface{} {
 			v.Traductor.AddLabel(NewLabel3)         // Lx:
 			v.Traductor.AddPrint("10", "c")         // printf("%c", 10); // \n
 
+		} else {
+			SearchSymbol := v.EntornoActual.BuscarSimbolo(AuxPass.(string))
+			if SearchSymbol.EsVector {
+				v.Traductor.AddComentario("\t//-------------------------")
+				v.Traductor.AddComentario("\t//Imprimir Vector")
+				NewTemp := v.Traductor.NewTemp()
+				LabelSI := v.Traductor.NewLabel()
+				LabelNO := v.Traductor.NewLabel()
+				v.Traductor.AddPrint("91", "c")
+				v.Traductor.AddPrint("32", "c")
+
+				v.Traductor.AddLabel(LabelNO)
+				v.Traductor.GetHeap(NewTemp, "(int)"+fmt.Sprint(Temp))
+				v.Traductor.AddIf(NewTemp, "-1", "==", LabelSI)
+				v.Traductor.AddPrint("32", "c")
+				if SearchSymbol.Type == "Int" {
+					v.Traductor.AddPrint("(int) "+NewTemp, "d")
+				} else if SearchSymbol.Type == "Float" {
+					v.Traductor.AddPrint("(float) "+NewTemp, "f")
+				} else if SearchSymbol.Type == "String" {
+					LabelSI2 := v.Traductor.NewLabel()
+					LabelNO2 := v.Traductor.NewLabel()
+					NewTemp2 := v.Traductor.NewTemp()
+					v.Traductor.AddPrint("91", "c")
+					v.Traductor.AddLabel(LabelNO2)
+					v.Traductor.GetHeap(NewTemp2, "(int)"+fmt.Sprint(NewTemp))
+					v.Traductor.AddIf(NewTemp2, "-1", "==", LabelSI2)
+					v.Traductor.AddPrint("(char) "+NewTemp2, "c")
+					v.Traductor.Contador(NewTemp, NewTemp, "+", "1")
+					v.Traductor.AddGoto(LabelNO2)
+					v.Traductor.AddLabel(LabelSI2)
+					v.Traductor.AddPrint("93", "c")
+					v.Traductor.AddPrint("32", "c")
+				} else if SearchSymbol.Type == "Character" {
+					v.Traductor.AddPrint("(char) "+NewTemp, "c")
+				}
+				v.Traductor.Contador(fmt.Sprint(Temp), fmt.Sprint(Temp), "+", "1")
+				v.Traductor.AddGoto(LabelNO)
+				v.Traductor.AddLabel(LabelSI)
+				v.Traductor.AddPrint("32", "c")
+				v.Traductor.AddPrint("93", "c")
+				v.Traductor.AddPrint("10", "c")
+				AuxPass = nil
+
+			}
+
 		}
 		Concatenar += fmt.Sprint(Valor)
 	}
@@ -804,6 +858,7 @@ func (v *Visitor) VisitPrint(ctx *parser.PrintContext) interface{} {
 func (v *Visitor) VisitIdValor(ctx *parser.IdValorContext) interface{} {
 	id := ctx.GetText()
 	value := v.EntornoActual.BuscarSimbolo(id)
+	fmt.Println(value.EsVector, value.Type, value.Stack, value.Value, value.TypeValue)
 	AuxPass = id
 	if value.Value == nil {
 		v.ListErrores = append(v.ListErrores, &Miceleanos.ErrorAnalizador{
@@ -1387,18 +1442,35 @@ func (v *Visitor) VisitDec_vector(ctx *parser.Dec_vectorContext) interface{} {
 	v.Traductor.AddComentario("//-------------------------------------")
 	v.Traductor.AddComentario("//Declaracion de Vector")
 	NewTemp := v.Traductor.NewTemp()
-	v.Traductor.Igual(NewTemp, "H", nil, nil)
+	if NuevoVector.TipoDate != "String" {
+		v.Traductor.Igual(NewTemp, "H", nil, nil)
+	}
+	var ListTempString = make([]string, 0)
 	for i := 0; ctx.Expresion(i) != nil; i++ {
-		valor := v.Visit(ctx.Expresion(i))
-		valor = valor.(Value).Valor
+
+		var valor interface{}
+		if NuevoVector.TipoDate == "Int" || NuevoVector.TipoDate == "Float" {
+			valor = v.Visit(ctx.Expresion(i))
+			valor = valor.(Value).Valor
+			v.Traductor.SetHeap("(int)H", fmt.Sprint(valor))
+			v.Traductor.Contador("H", "H", "+", "1")
+		} else if NuevoVector.TipoDate == "Character" {
+			ControlString = true
+			valor = v.Visit(ctx.Expresion(i))
+			valor = valor.(Value).Valor
+			v.Traductor.SetHeap("(int)H", strconv.Itoa(int(valor.(string)[0])))
+			v.Traductor.Contador("H", "H", "+", "1")
+			ControlString = false
+		} else if NuevoVector.TipoDate == "String" {
+			valor = v.Visit(ctx.Expresion(i))
+			Temp := valor.(Value).Temp.(string)
+			valor = valor.(Value).Valor
+			ListTempString = append(ListTempString, Temp)
+		}
 		correcto := NuevoVector.VectorAppend(valor)
 		if !correcto {
 			v.AddError(ctx.Expresion(i).GetStart().GetLine(), ctx.Expresion(i).GetStart().GetColumn(), "VECTOR", "Tipo esperado: "+NuevoVector.TipoDate, "SEMANTICO")
 			return false
-		}
-		if ctx.Tipo().GetText() == "Int" {
-			v.Traductor.SetHeap("(int)H", fmt.Sprint(valor))
-			v.Traductor.Contador("H", "H", "+", "1")
 		}
 
 	}
@@ -1409,6 +1481,14 @@ func (v *Visitor) VisitDec_vector(ctx *parser.Dec_vectorContext) interface{} {
 		TaGlobal := NewSimbGlobal("Vector", NuevoVector.GetTipo(), v.EntornoActual.GetEntorno(), ctx.ID().GetSymbol().GetLine(), ctx.ID().GetSymbol().GetColumn())
 		v.AddGlobalSimbol(NuevoVector.GetId(), TaGlobal)
 
+		if ctx.Tipo().GetText() == "String" {
+			v.Traductor.Igual(NewTemp, "H", nil, nil)
+			for i := 0; i < len(ListTempString); i++ {
+				fmt.Println(ListTempString[i])
+				v.Traductor.SetHeap("(int)H", ListTempString[i])
+				v.Traductor.Contador("H", "H", "+", "1")
+			}
+		}
 		v.Traductor.SetHeap("(int)H", fmt.Sprint(-1))
 		v.Traductor.Contador("H", "H", "+", "1")
 
@@ -1438,6 +1518,32 @@ func (v *Visitor) VisitDec_vector_V_C(ctx *parser.Dec_vector_V_CContext) interfa
 				if Is_correct {
 					TaGlobal := NewSimbGlobal("Vector", Encontrado.Type, v.EntornoActual.GetEntorno(), ctx.GetStart().GetLine(), ctx.GetStart().GetColumn())
 					v.AddGlobalSimbol(ctx.ID().GetText(), TaGlobal)
+					CopiarHeap = true
+					v.Traductor.AddComentario("//----------------------------")
+					v.Traductor.AddComentario("//Declaracion vector")
+					v.Traductor.Br()
+					NewTemp := v.Traductor.NewTemp()
+					v.Traductor.GetStack(NewTemp, fmt.Sprint(Encontrado.Stack))
+					v.Traductor.Br()
+					NewList := v.Traductor.NewTemp()
+					v.Traductor.Igual(NewList, "H", nil, nil)
+					v.Traductor.Br()
+					Newcont := v.Traductor.NewTemp()
+					v.Traductor.Igual(Newcont, "P", fmt.Sprint(v.EntornoActual.Size), "+")
+					v.Traductor.Igual(Newcont, Newcont, "1", "+")
+					v.Traductor.SetStack("(int)"+Newcont, NewTemp)
+					v.Traductor.Contador("P", "P", "+", fmt.Sprint(v.EntornoActual.Size))
+					v.Traductor.callVoid("CopiarHeap")
+					v.Traductor.Contador("P", "P", "-", fmt.Sprint(v.EntornoActual.Size))
+					v.Traductor.SetHeap("(int) H", "-1")
+					v.Traductor.Contador("H", "H", "+", "1")
+					v.Traductor.Br()
+					Stack := v.Traductor.GetIndex()
+					v.Traductor.SetStack(fmt.Sprint(Stack), NewList)
+					v.Traductor.Br()
+
+					v.EntornoActual.ActualizarStack(ctx.ID().GetText(), Stack)
+
 					return true
 				} else {
 					v.AddError(ctx.ID().GetSymbol().GetLine(), ctx.ID().GetSymbol().GetColumn(), "VECTOR", "Ya existe en el entorno actual: "+ctx.ID().GetText(), "SEMANTICO")
@@ -1462,6 +1568,20 @@ func (v *Visitor) VisitDec_vector_V_C(ctx *parser.Dec_vector_V_CContext) interfa
 		if Is_correct {
 			TaGlobal := NewSimbGlobal("Vector", NuevoVector.GetTipo(), v.EntornoActual.GetEntorno(), ctx.ID().GetSymbol().GetLine(), ctx.ID().GetSymbol().GetColumn())
 			v.AddGlobalSimbol(NuevoVector.GetId(), TaGlobal)
+
+			v.Traductor.AddComentario("//-----------------------")
+			v.Traductor.AddComentario("//Declaracion de Vector")
+			v.Traductor.Br()
+			Stack := v.Traductor.NewTemp()
+			v.Traductor.Igual(Stack, "H", nil, nil)
+			v.Traductor.Br()
+			v.Traductor.SetHeap("(int) H", fmt.Sprint(-1))
+			v.Traductor.Contador("H", "H", "+", "1")
+			Index := v.Traductor.GetIndex()
+			v.Traductor.Br()
+			v.Traductor.SetStack(fmt.Sprint(Index), Stack)
+			v.EntornoActual.ActualizarStack(NuevoVector.Id, Index)
+
 		} else {
 			v.AddError(ctx.ID().GetSymbol().GetLine(), ctx.ID().GetSymbol().GetColumn(), "VECTOR", "Ya existe en el entorno actual: "+NuevoVector.GetId(), "SEMANTICO")
 			return false
@@ -1480,15 +1600,49 @@ func (v *Visitor) VisitFuncvectorList(ctx *parser.FuncvectorListContext) interfa
 	if Encontrado.EsVector {
 		if esTipo == "append" {
 			if Encontrado.TypeValue == "var" {
+
 				AppendVector := Proceso.NewVector()
 				AppendVector.TipoDate = Encontrado.Type
 				AppendVector.List = Encontrado.Value.([]interface{})
 				AppendVector.Id = Id
 				AppendVector.TipoVariable = Encontrado.TypeValue
-				is_Correct := AppendVector.FunctionAppend(v.Visit(ctx.Expresion()))
+				NewVal := v.Visit(ctx.Expresion())
+
+				is_Correct := AppendVector.FunctionAppend(NewVal.(Value).Valor)
 				if is_Correct {
 					NuevoValor := NewSimbolo(AppendVector.GetList(), AppendVector.GetTipo(), AppendVector.GetTipoVariable(), true)
 					v.EntornoActual.ActualizarSimbolo(Id, NuevoValor)
+					v.Traductor.AddComentario("\t//-------------------")
+					v.Traductor.AddComentario("\t//Vector Append")
+
+					CopiarHeap = true
+					v.Traductor.Br()
+					NewTempStack := v.Traductor.NewTemp()
+					v.Traductor.GetStack(NewTempStack, fmt.Sprint(Encontrado.Stack))
+					v.Traductor.Br()
+					NewHeap := v.Traductor.NewTemp()
+					v.Traductor.Igual(NewHeap, "H", nil, nil)
+					v.Traductor.Br()
+					NewTemp := v.Traductor.NewTemp()
+					v.Traductor.Igual(NewTemp, "P", v.EntornoActual.Size, "+")
+					v.Traductor.Contador(NewTemp, NewTemp, "+", "1")
+					v.Traductor.SetStack("(int)"+NewTemp, NewTempStack)
+					v.Traductor.Contador("P", "P", "+", fmt.Sprint(v.EntornoActual.Size))
+					v.Traductor.callVoid("CopiarHeap")
+					v.Traductor.Contador("P", "P", "-", fmt.Sprint(v.EntornoActual.Size))
+					v.Traductor.Br()
+					v.Traductor.SetHeap("(int)H", fmt.Sprint(NewVal.(Value).Temp))
+					v.Traductor.Contador("H", "H", "+", "1")
+					v.Traductor.SetHeap("(int)H", fmt.Sprint(-1))
+					v.Traductor.Contador("H", "H", "+", "1")
+					v.Traductor.Br()
+					v.Traductor.SetStack(fmt.Sprint(Encontrado.Stack), NewHeap)
+					v.Traductor.Br()
+
+					v.Traductor.AddComentario("\t//Fin Vector Append")
+					v.Traductor.AddComentario("\t//-------------------")
+					v.EntornoActual.ActualizarStack(Id, Encontrado.Stack)
+
 				} else {
 					v.AddError(ctx.Expresion().GetStart().GetLine(), ctx.Expresion().GetStart().GetColumn(), "VECTOR", "Tipo esperado: "+AppendVector.TipoDate, "SEMANTICO")
 					return false
@@ -1509,6 +1663,43 @@ func (v *Visitor) VisitFuncvectorList(ctx *parser.FuncvectorListContext) interfa
 				if is_Correct {
 					NuevoValor := NewSimbolo(RemoveVector.GetList(), RemoveVector.GetTipo(), RemoveVector.GetTipoVariable(), true)
 					v.EntornoActual.ActualizarSimbolo(Id, NuevoValor)
+
+					v.Traductor.AddComentario("\t//-------------------")
+					v.Traductor.AddComentario("\t//Vector RemoveLast")
+					v.Traductor.Br()
+					NewTemp := v.Traductor.NewTemp()
+					v.Traductor.GetStack(NewTemp, fmt.Sprint(Encontrado.Stack))
+					NewTempPos := v.Traductor.NewTemp()
+					v.Traductor.Igual(NewTempPos, "0", nil, nil)
+					LabelSI := v.Traductor.NewLabel()
+					LabelNO := v.Traductor.NewLabel()
+					HeapVal := v.Traductor.NewTemp()
+					v.Traductor.AddLabel(LabelNO)
+					v.Traductor.GetHeap(HeapVal, "(int)"+NewTemp)
+					v.Traductor.AddIf(HeapVal, fmt.Sprint(-1), "==", LabelSI)
+					v.Traductor.Contador(NewTempPos, NewTempPos, "+", "1")
+					v.Traductor.Contador(NewTemp, NewTemp, "+", "1")
+					v.Traductor.AddGoto(LabelNO)
+					v.Traductor.AddLabel(LabelSI)
+					LabelVacioSI := v.Traductor.NewLabel()
+					LabelVacioNO := v.Traductor.NewLabel()
+					v.Traductor.AddIf(NewTempPos, fmt.Sprint(0), "!=", LabelVacioSI)
+					v.Traductor.AddPrint("118", "c")
+					v.Traductor.AddPrint("97", "c")
+					v.Traductor.AddPrint("99", "c")
+					v.Traductor.AddPrint("105", "c")
+					v.Traductor.AddPrint("111", "c")
+					v.Traductor.AddPrint("32", "c")
+					v.Traductor.AddGoto(LabelVacioNO)
+					v.Traductor.AddLabel(LabelVacioSI)
+					v.Traductor.Contador(NewTemp, NewTemp, "-", "1")
+					v.Traductor.SetHeap("(int)"+NewTemp, fmt.Sprint(-1))
+					v.Traductor.AddLabel(LabelVacioNO)
+
+					v.Traductor.AddComentario("\t//Fin Vector RemoveLast")
+					v.Traductor.AddComentario("\t//-------------------")
+					v.EntornoActual.ActualizarStack(Id, Encontrado.Stack)
+
 				} else {
 					v.AddError(ctx.GetStart().GetLine(), ctx.GetStart().GetColumn(), "VECTOR", "El vector no tiene elementos", "SEMANTICO")
 					return false
@@ -1522,10 +1713,85 @@ func (v *Visitor) VisitFuncvectorList(ctx *parser.FuncvectorListContext) interfa
 				RemoveVector.List = Encontrado.Value.([]interface{})
 				RemoveVector.Id = Id
 				RemoveVector.TipoVariable = Encontrado.TypeValue
-				is_Correct := RemoveVector.Remove(v.Visit(ctx.Expresion()))
+				Newval := v.Visit(ctx.Expresion())
+				is_Correct := RemoveVector.Remove(Newval.(Value).Valor)
 				if is_Correct == true {
 					NuevoValor := NewSimbolo(RemoveVector.GetList(), RemoveVector.GetTipo(), RemoveVector.GetTipoVariable(), true)
 					v.EntornoActual.ActualizarSimbolo(Id, NuevoValor)
+					Control_Count = true
+					v.Traductor.AddComentario("\t//-------------------")
+					v.Traductor.AddComentario("\t//vector removeAt")
+
+					v.Traductor.Br()
+					Stack := v.Traductor.NewTemp()
+					v.Traductor.GetStack(Stack, fmt.Sprint(Encontrado.Stack))
+					Pos := v.Traductor.NewTemp()
+					ListaNueva := v.Traductor.NewTemp()
+					v.Traductor.Igual(ListaNueva, "H", nil, nil)
+					v.Traductor.Igual(Pos, "0", nil, nil)
+
+					NetTemp := v.Traductor.NewTemp()
+					v.Traductor.Igual(NetTemp, "P", v.EntornoActual.Size, "+")
+					v.Traductor.Contador(NetTemp, NetTemp, "+", "1")
+					v.Traductor.SetStack("(int)"+NetTemp, Stack)
+					v.Traductor.Contador("P", "P", "+", fmt.Sprint(v.EntornoActual.Size))
+					v.Traductor.callVoid("VectorCount")
+					Size := v.Traductor.NewTemp()
+					v.Traductor.GetStack(Size, "(int)P")
+					v.Traductor.Contador("P", "P", "-", fmt.Sprint(v.EntornoActual.Size))
+					v.Traductor.Br()
+					LabelError := v.Traductor.NewLabel()
+					LabelNoError := v.Traductor.NewLabel()
+					v.Traductor.Contador(Size, Size, "-", "1")
+					v.Traductor.AddIf(fmt.Sprint(Newval.(Value).Temp), Size, ">", LabelError)
+					v.Traductor.AddIf(fmt.Sprint(Newval.(Value).Temp), "0", "<", LabelError)
+					v.Traductor.Br()
+					Seguir := v.Traductor.NewLabel()
+					NoSeguir := v.Traductor.NewLabel()
+					v.Traductor.AddLabel(Seguir)
+					HeapVal := v.Traductor.NewTemp()
+					v.Traductor.GetHeap(HeapVal, "(int)"+Stack)
+					v.Traductor.AddIf(HeapVal, fmt.Sprint(-1), "==", NoSeguir)
+					v.Traductor.Br()
+
+					IndiceSI := v.Traductor.NewLabel()
+					v.Traductor.AddIf(Pos, fmt.Sprint(Newval.(Value).Temp), "==", IndiceSI)
+					v.Traductor.Br()
+					v.Traductor.SetHeap("(int)H", HeapVal)
+					v.Traductor.Contador("H", "H", "+", "1")
+					v.Traductor.AddLabel(IndiceSI)
+					v.Traductor.Br()
+
+					v.Traductor.Contador(Pos, Pos, "+", "1")
+					v.Traductor.Contador(Stack, Stack, "+", "1")
+					v.Traductor.AddGoto(Seguir)
+					v.Traductor.Br()
+					v.Traductor.AddLabel(NoSeguir)
+					v.Traductor.SetHeap("(int)H", fmt.Sprint(-1))
+					v.Traductor.Contador("H", "H", "+", "1")
+					v.Traductor.SetStack(fmt.Sprint(Encontrado.Stack), ListaNueva)
+					v.Traductor.Br()
+
+					v.Traductor.AddGoto(LabelNoError)
+					v.Traductor.AddLabel(LabelError)
+					v.Traductor.AddPrint("66", "c")
+					v.Traductor.AddPrint("111", "c")
+					v.Traductor.AddPrint("117", "c")
+					v.Traductor.AddPrint("110", "c")
+					v.Traductor.AddPrint("100", "c")
+					v.Traductor.AddPrint("115", "c")
+					v.Traductor.AddPrint("69", "c")
+					v.Traductor.AddPrint("114", "c")
+					v.Traductor.AddPrint("114", "c")
+					v.Traductor.AddPrint("111", "c")
+					v.Traductor.AddPrint("114", "c")
+					v.Traductor.AddPrint("10", "c")
+					v.Traductor.AddLabel(LabelNoError)
+
+					v.Traductor.AddComentario("\t//Fin vector removeAt")
+					v.Traductor.AddComentario("\t//-------------------")
+					v.EntornoActual.ActualizarStack(Id, Encontrado.Stack)
+
 				} else if is_Correct == false {
 					v.AddError(ctx.Expresion().GetStart().GetLine(), ctx.Expresion().GetStart().GetColumn(), "VECTOR", "Tipo esperado: "+RemoveVector.GetTipo(), "SEMANTICO")
 					return false
@@ -1543,6 +1809,7 @@ func (v *Visitor) VisitFuncvectorList(ctx *parser.FuncvectorListContext) interfa
 }
 
 func (v *Visitor) VisitVectorCount(ctx *parser.VectorCountContext) interface{} {
+	Control_Count = true
 	Id := ctx.ID().GetText()
 	Encontrado := v.EntornoActual.BuscarSimbolo(Id)
 	CountVector := Proceso.NewVector()
@@ -1553,20 +1820,64 @@ func (v *Visitor) VisitVectorCount(ctx *parser.VectorCountContext) interface{} {
 		CountVector.Id = Id
 		CountVector.TipoVariable = Encontrado.TypeValue
 	}
-	return NewValue(nil, nil, nil, CountVector.Count())
+
+	v.Traductor.AddComentario("//-------------------------------------")
+	v.Traductor.AddComentario("//Vector Count")
+	v.Traductor.Br()
+	NewTemp := v.Traductor.NewTemp()
+	v.Traductor.GetStack(NewTemp, fmt.Sprint(Encontrado.Stack))
+	NewTemp2 := v.Traductor.NewTemp()
+	v.Traductor.Igual(NewTemp2, "P", v.EntornoActual.Size, "+")
+	v.Traductor.Contador(NewTemp2, NewTemp2, "+", "1")
+	v.Traductor.SetStack("(int)"+fmt.Sprint(NewTemp2), NewTemp)
+	v.Traductor.Contador("P", "P", "+", fmt.Sprint(v.EntornoActual.Size))
+	v.Traductor.callVoid("VectorCount")
+	NewTemp3 := v.Traductor.NewTemp()
+	v.Traductor.GetStack(fmt.Sprint(NewTemp3), "(int) P")
+	v.Traductor.Contador("P", "P", "-", fmt.Sprint(v.EntornoActual.Size))
+
+	return NewValue(NewTemp3, nil, nil, CountVector.Count())
 }
 
 func (v *Visitor) VisitVectorVacio(ctx *parser.VectorVacioContext) interface{} {
 	Id := ctx.ID().GetText()
 	Encontrado := v.EntornoActual.BuscarSimbolo(Id)
 	CountVector := Proceso.NewVector()
+	LabelVacio := ""
+	LabelNoVacio := ""
 	if Encontrado.EsVector {
+		TypeBoolC3D = 2
+		Control_Count = true
 		CountVector.TipoDate = Encontrado.Type
 		CountVector.List = Encontrado.Value.([]interface{})
 		CountVector.Id = Id
 		CountVector.TipoVariable = Encontrado.TypeValue
+		v.Traductor.AddComentario("//------------------")
+		v.Traductor.AddComentario("//Vector EsVacio")
+		v.Traductor.Br()
+		NewTemp := v.Traductor.NewTemp()
+		v.Traductor.GetStack(NewTemp, fmt.Sprint(Encontrado.Stack))
+		v.Traductor.Br()
+		NewTemp2 := v.Traductor.NewTemp()
+		v.Traductor.Igual(NewTemp2, "P", v.EntornoActual.Size, "+")
+		v.Traductor.Contador(NewTemp2, NewTemp2, "+", "1")
+		v.Traductor.SetStack("(int)"+fmt.Sprint(NewTemp2), NewTemp)
+		v.Traductor.Contador("P", "P", "+", fmt.Sprint(v.EntornoActual.Size))
+		v.Traductor.callVoid("VectorCount")
+		NewTemp3 := v.Traductor.NewTemp()
+		v.Traductor.GetStack(fmt.Sprint(NewTemp3), "(int) P")
+		v.Traductor.Contador("P", "P", "-", fmt.Sprint(v.EntornoActual.Size))
+
+		LabelVacio = v.Traductor.NewLabel()
+		LabelNoVacio = v.Traductor.NewLabel()
+		v.Traductor.AddIf(NewTemp3, fmt.Sprint(0), "==", LabelVacio)
+		v.Traductor.AddGoto(LabelNoVacio)
+
+		v.Traductor.AddComentario("//Fin Vector EsVacio")
+		v.Traductor.AddComentario("//------------------")
+
 	}
-	return CountVector.IsVacio()
+	return NewValue(nil, LabelVacio, LabelNoVacio, CountVector.IsVacio())
 }
 
 func (v *Visitor) VisitVectorAsignacion(ctx *parser.VectorAsignacionContext) interface{} {

@@ -14,6 +14,7 @@ type Traduction struct {
 	Code_Final     []string // Genera la Traduccion final
 	List_funciones []string // Esta es una Lista que traera todas las funciones
 	IsMain         bool     // Para saber si es main o no
+	IsTypeVec      int
 }
 
 func NewTraduction() *Traduction {
@@ -238,7 +239,7 @@ func (t *Traduction) PrimiteConcatString() string {
 
 	PrintString := "\n"
 	PrintString += "// Concatenar String Primitivo" + "\n"
-	PrintString += "void ConcatenarString() {" + "\n"
+	PrintString += "void CopiarHeap() {" + "\n"
 	PrintString += "\t" + NewTemp + " = " + "P + 1" + ";" + "\n"
 	PrintString += "\t" + NewTemp2 + " = " + "stack[ (int) " + NewTemp + "]" + ";" + "\n"
 	PrintString += "\t" + Label + ":" + "\n"
@@ -254,6 +255,38 @@ func (t *Traduction) PrimiteConcatString() string {
 	PrintString += "\n"
 
 	return PrintString
+}
+
+func (t *Traduction) VectorCount() string {
+
+	NewTemp := t.NewTemp()
+	NewTemp2 := t.NewTemp()
+	NewTemp3 := t.NewTemp()
+	NewTemp4 := t.NewTemp()
+
+	NewLabelSI := t.NewLabel()
+	NewLabelNO := t.NewLabel()
+
+	Print_String := "\n"
+	Print_String += "// Contar Vector" + "\n"
+	Print_String += "void VectorCount() {" + "\n"
+	Print_String += "\t" + NewTemp + " = " + "P + 1" + ";" + "\n"
+	Print_String += "\t" + NewTemp2 + " = " + "stack[ (int) " + NewTemp + "]" + ";" + "\n"
+	Print_String += "\t" + NewTemp3 + " = " + "0" + ";" + "\n"
+	Print_String += "\t" + NewLabelNO + ":" + "\n"
+	Print_String += "\t" + NewTemp4 + " = " + "heap[(int) " + NewTemp2 + "]" + ";" + "\n"
+	Print_String += "\t" + "if (" + NewTemp4 + " == -1) goto " + NewLabelSI + ";" + "\n"
+	Print_String += "\t" + NewTemp3 + " = " + NewTemp3 + " + 1" + ";" + "\n"
+	Print_String += "\t" + NewTemp2 + " = " + NewTemp2 + " + 1" + ";" + "\n"
+	Print_String += "\t" + "goto " + NewLabelNO + ";" + "\n"
+	Print_String += "\t" + NewLabelSI + ":" + "\n"
+	Print_String += "\t" + "stack[(int) P] = " + NewTemp3 + ";" + "\n"
+	Print_String += "\t" + "return;" + "\n"
+	Print_String += "}" + "\n"
+	Print_String += "\n"
+
+	return Print_String
+
 }
 
 // ------------------------------------------------ Codigo Final de la traduccion ----------------------------------------------

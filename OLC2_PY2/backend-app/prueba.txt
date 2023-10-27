@@ -1,16 +1,2 @@
-
-var d = 2
-var c = 89
-var vec1: [Int] =[1,2,3,4,5]
-vec1.removeLast()
-vec1.remove( at: 1)
-var copia: [Int] = vec1
-copia.append(10)
-
-print(vec1)
-print(copia)
-
-
-
-
-
+var w = Int("10")
+print(w)

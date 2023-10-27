@@ -142,6 +142,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_inicio; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterInicio(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitInicio(this);
+		}
 	}
 
 	public final InicioContext inicio() throws RecognitionException {
@@ -185,6 +193,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_lista; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterLista(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitLista(this);
+		}
 	}
 
 	public final ListaContext lista() throws RecognitionException {
@@ -294,6 +310,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_lista_proceso; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterLista_proceso(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitLista_proceso(this);
+		}
 	}
 
 	public final Lista_procesoContext lista_proceso() throws RecognitionException {
@@ -415,6 +439,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_comentarios; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterComentarios(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitComentarios(this);
+		}
 	}
 
 	public final ComentariosContext comentarios() throws RecognitionException {
@@ -459,6 +491,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_retornar; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterRetornar(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitRetornar(this);
+		}
 	}
 
 	public final RetornarContext retornar() throws RecognitionException {
@@ -532,6 +572,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_declaracion; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterDeclaracion(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitDeclaracion(this);
+		}
 	}
 
 	public final DeclaracionContext declaracion() throws RecognitionException {
@@ -609,6 +657,14 @@ public class SintaxParser extends Parser {
 		public TerminalNode LET() { return getToken(SintaxParser.LET, 0); }
 		public TerminalNode IGUAL() { return getToken(SintaxParser.IGUAL, 0); }
 		public DeclaracionTipoContext(Dec_tipo_valorContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterDeclaracionTipo(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitDeclaracionTipo(this);
+		}
 	}
 
 	public final Dec_tipo_valorContext dec_tipo_valor() throws RecognitionException {
@@ -684,6 +740,14 @@ public class SintaxParser extends Parser {
 		public TerminalNode VAR() { return getToken(SintaxParser.VAR, 0); }
 		public TerminalNode LET() { return getToken(SintaxParser.LET, 0); }
 		public DeclaracionTipoImplicitoContext(Dec_valorContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterDeclaracionTipoImplicito(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitDeclaracionTipoImplicito(this);
+		}
 	}
 
 	public final Dec_valorContext dec_valor() throws RecognitionException {
@@ -736,6 +800,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_asignacion; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterAsignacion(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitAsignacion(this);
+		}
 	}
 
 	public final AsignacionContext asignacion() throws RecognitionException {
@@ -786,6 +858,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_asignacionVariable; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterAsignacionVariable(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitAsignacionVariable(this);
+		}
 	}
 
 	public final AsignacionVariableContext asignacionVariable() throws RecognitionException {
@@ -841,6 +921,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_asignacionVector; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterAsignacionVector(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitAsignacionVector(this);
+		}
 	}
 
 	public final AsignacionVectorContext asignacionVector() throws RecognitionException {
@@ -892,6 +980,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_subasig; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterSubasig(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitSubasig(this);
+		}
 	}
 
 	public final SubasigContext subasig() throws RecognitionException {
@@ -943,6 +1039,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_print; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterPrint(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitPrint(this);
+		}
 	}
 
 	public final PrintContext print() throws RecognitionException {
@@ -1011,6 +1115,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_if; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterIf(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitIf(this);
+		}
 	}
 
 	public final IfContext if_() throws RecognitionException {
@@ -1080,6 +1192,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_elseif_; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterElseif_(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitElseif_(this);
+		}
 	}
 
 	public final Elseif_Context elseif_() throws RecognitionException {
@@ -1119,6 +1239,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_else; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterElse(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitElse(this);
+		}
 	}
 
 	public final ElseContext else_() throws RecognitionException {
@@ -1165,6 +1293,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_switch; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterSwitch(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitSwitch(this);
+		}
 	}
 
 	public final SwitchContext switch_() throws RecognitionException {
@@ -1236,6 +1372,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_caso; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterCaso(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitCaso(this);
+		}
 	}
 
 	public final CasoContext caso() throws RecognitionException {
@@ -1292,6 +1436,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_default; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterDefault(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitDefault(this);
+		}
 	}
 
 	public final DefaultContext default_() throws RecognitionException {
@@ -1345,6 +1497,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_while; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterWhile(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitWhile(this);
+		}
 	}
 
 	public final WhileContext while_() throws RecognitionException {
@@ -1394,6 +1554,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_for; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterFor(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitFor(this);
+		}
 	}
 
 	public final ForContext for_() throws RecognitionException {
@@ -1465,6 +1633,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_guard; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterGuard(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitGuard(this);
+		}
 	}
 
 	public final GuardContext guard() throws RecognitionException {
@@ -1544,6 +1720,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_dec_vector; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterDec_vector(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitDec_vector(this);
+		}
 	}
 
 	public final Dec_vectorContext dec_vector() throws RecognitionException {
@@ -1631,6 +1815,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_dec_vector_V_C; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterDec_vector_V_C(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitDec_vector_V_C(this);
+		}
 	}
 
 	public final Dec_vector_V_CContext dec_vector_V_C() throws RecognitionException {
@@ -1687,6 +1879,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_subVC; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterSubVC(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitSubVC(this);
+		}
 	}
 
 	public final SubVCContext subVC() throws RecognitionException {
@@ -1744,6 +1944,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_funcvectorList; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterFuncvectorList(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitFuncvectorList(this);
+		}
 	}
 
 	public final FuncvectorListContext funcvectorList() throws RecognitionException {
@@ -1805,6 +2013,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_tipevector; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterTipevector(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitTipevector(this);
+		}
 	}
 
 	public final TipevectorContext tipevector() throws RecognitionException {
@@ -1851,6 +2067,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_bloque; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterBloque(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitBloque(this);
+		}
 	}
 
 	public final BloqueContext bloque() throws RecognitionException {
@@ -1900,6 +2124,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_control; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterControl(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitControl(this);
+		}
 	}
 
 	public final ControlContext control() throws RecognitionException {
@@ -1943,6 +2175,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_tipo; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterTipo(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitTipo(this);
+		}
 	}
 
 	public final TipoContext tipo() throws RecognitionException {
@@ -1993,6 +2233,14 @@ public class SintaxParser extends Parser {
 		public TerminalNode PUNTO() { return getToken(SintaxParser.PUNTO, 0); }
 		public TerminalNode COUNT() { return getToken(SintaxParser.COUNT, 0); }
 		public VectorCountContext(ExpresionContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterVectorCount(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitVectorCount(this);
+		}
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class OpLogicoContext extends ExpresionContext {
@@ -2008,11 +2256,27 @@ public class SintaxParser extends Parser {
 		public TerminalNode AND() { return getToken(SintaxParser.AND, 0); }
 		public TerminalNode OR() { return getToken(SintaxParser.OR, 0); }
 		public OpLogicoContext(ExpresionContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterOpLogico(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitOpLogico(this);
+		}
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class SinValorContext extends ExpresionContext {
 		public TerminalNode SINVALOR() { return getToken(SintaxParser.SINVALOR, 0); }
 		public SinValorContext(ExpresionContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterSinValor(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitSinValor(this);
+		}
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class VectorAsignacionContext extends ExpresionContext {
@@ -2023,6 +2287,14 @@ public class SintaxParser extends Parser {
 		}
 		public TerminalNode CLOSE_SQUARE_BRACKET() { return getToken(SintaxParser.CLOSE_SQUARE_BRACKET, 0); }
 		public VectorAsignacionContext(ExpresionContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterVectorAsignacion(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitVectorAsignacion(this);
+		}
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class OpAritmeticoContext extends ExpresionContext {
@@ -2041,16 +2313,40 @@ public class SintaxParser extends Parser {
 		public TerminalNode MAS() { return getToken(SintaxParser.MAS, 0); }
 		public TerminalNode MENOS() { return getToken(SintaxParser.MENOS, 0); }
 		public OpAritmeticoContext(ExpresionContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterOpAritmetico(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitOpAritmetico(this);
+		}
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class NumberValorContext extends ExpresionContext {
 		public TerminalNode NUMBER() { return getToken(SintaxParser.NUMBER, 0); }
 		public NumberValorContext(ExpresionContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterNumberValor(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitNumberValor(this);
+		}
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class ValorsimpleContext extends ExpresionContext {
 		public TerminalNode NULO() { return getToken(SintaxParser.NULO, 0); }
 		public ValorsimpleContext(ExpresionContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterValorsimple(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitValorsimple(this);
+		}
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class CasteoContext extends ExpresionContext {
@@ -2063,6 +2359,14 @@ public class SintaxParser extends Parser {
 		}
 		public TerminalNode CLOSE_PAREN() { return getToken(SintaxParser.CLOSE_PAREN, 0); }
 		public CasteoContext(ExpresionContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterCasteo(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitCasteo(this);
+		}
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class VectorVacioContext extends ExpresionContext {
@@ -2070,6 +2374,14 @@ public class SintaxParser extends Parser {
 		public TerminalNode PUNTO() { return getToken(SintaxParser.PUNTO, 0); }
 		public TerminalNode ISEMPTY() { return getToken(SintaxParser.ISEMPTY, 0); }
 		public VectorVacioContext(ExpresionContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterVectorVacio(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitVectorVacio(this);
+		}
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class ParentexprContext extends ExpresionContext {
@@ -2079,6 +2391,14 @@ public class SintaxParser extends Parser {
 		}
 		public TerminalNode CLOSE_PAREN() { return getToken(SintaxParser.CLOSE_PAREN, 0); }
 		public ParentexprContext(ExpresionContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterParentexpr(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitParentexpr(this);
+		}
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class SelfCALLContext extends ExpresionContext {
@@ -2090,11 +2410,27 @@ public class SintaxParser extends Parser {
 			return getRuleContext(ExpresionContext.class,0);
 		}
 		public SelfCALLContext(ExpresionContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterSelfCALL(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitSelfCALL(this);
+		}
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class StringValorContext extends ExpresionContext {
 		public TerminalNode STRING_SINTAX() { return getToken(SintaxParser.STRING_SINTAX, 0); }
 		public StringValorContext(ExpresionContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterStringValor(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitStringValor(this);
+		}
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class OpRelacionalContext extends ExpresionContext {
@@ -2112,11 +2448,27 @@ public class SintaxParser extends Parser {
 		public TerminalNode MAYOR_IGUAL() { return getToken(SintaxParser.MAYOR_IGUAL, 0); }
 		public TerminalNode MENOR_IGUAL() { return getToken(SintaxParser.MENOR_IGUAL, 0); }
 		public OpRelacionalContext(ExpresionContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterOpRelacional(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitOpRelacional(this);
+		}
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class BoolValorContext extends ExpresionContext {
 		public TerminalNode VALORBOOL() { return getToken(SintaxParser.VALORBOOL, 0); }
 		public BoolValorContext(ExpresionContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterBoolValor(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitBoolValor(this);
+		}
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class PrintLLamadaContext extends ExpresionContext {
@@ -2124,6 +2476,14 @@ public class SintaxParser extends Parser {
 			return getRuleContext(FuncLLamadaContext.class,0);
 		}
 		public PrintLLamadaContext(ExpresionContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterPrintLLamada(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitPrintLLamada(this);
+		}
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class OpLogicoNotContext extends ExpresionContext {
@@ -2132,11 +2492,27 @@ public class SintaxParser extends Parser {
 			return getRuleContext(ExpresionContext.class,0);
 		}
 		public OpLogicoNotContext(ExpresionContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterOpLogicoNot(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitOpLogicoNot(this);
+		}
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class IdValorContext extends ExpresionContext {
 		public TerminalNode ID() { return getToken(SintaxParser.ID, 0); }
 		public IdValorContext(ExpresionContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterIdValor(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitIdValor(this);
+		}
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class OpComparativoContext extends ExpresionContext {
@@ -2152,6 +2528,14 @@ public class SintaxParser extends Parser {
 		public TerminalNode IGUAL_IGUAL() { return getToken(SintaxParser.IGUAL_IGUAL, 0); }
 		public TerminalNode DIFERENTE() { return getToken(SintaxParser.DIFERENTE, 0); }
 		public OpComparativoContext(ExpresionContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterOpComparativo(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitOpComparativo(this);
+		}
 	}
 
 	public final ExpresionContext expresion() throws RecognitionException {
@@ -2497,6 +2881,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_funciones; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterFunciones(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitFunciones(this);
+		}
 	}
 
 	public final FuncionesContext funciones() throws RecognitionException {
@@ -2587,6 +2979,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_parametros; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterParametros(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitParametros(this);
+		}
 	}
 
 	public final ParametrosContext parametros() throws RecognitionException {
@@ -2699,6 +3099,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_existeExInt; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterExisteExInt(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitExisteExInt(this);
+		}
 	}
 
 	public final ExisteExIntContext existeExInt() throws RecognitionException {
@@ -2742,6 +3150,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_tipofuncion; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterTipofuncion(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitTipofuncion(this);
+		}
 	}
 
 	public final TipofuncionContext tipofuncion() throws RecognitionException {
@@ -2795,6 +3211,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_tipoinout; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterTipoinout(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitTipoinout(this);
+		}
 	}
 
 	public final TipoinoutContext tipoinout() throws RecognitionException {
@@ -2830,6 +3254,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_funcLLamada; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterFuncLLamada(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitFuncLLamada(this);
+		}
 	}
 
 	public final FuncLLamadaContext funcLLamada() throws RecognitionException {
@@ -2887,6 +3319,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_parametrosLLamada; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterParametrosLLamada(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitParametrosLLamada(this);
+		}
 	}
 
 	public final ParametrosLLamadaContext parametrosLLamada() throws RecognitionException {
@@ -2987,6 +3427,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_estructs; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterEstructs(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitEstructs(this);
+		}
 	}
 
 	public final EstructsContext estructs() throws RecognitionException {
@@ -3052,6 +3500,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_lista_struct; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterLista_struct(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitLista_struct(this);
+		}
 	}
 
 	public final Lista_structContext lista_struct() throws RecognitionException {
@@ -3155,6 +3611,14 @@ public class SintaxParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_funcionestruct; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).enterFuncionestruct(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SintaxListener ) ((SintaxListener)listener).exitFuncionestruct(this);
+		}
 	}
 
 	public final FuncionestructContext funcionestruct() throws RecognitionException {

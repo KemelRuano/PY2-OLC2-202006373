@@ -1889,15 +1889,69 @@ func (v *Visitor) VisitVectorAsignacion(ctx *parser.VectorAsignacionContext) int
 	}
 
 	List := Encontrado.Value.([]interface{})
+	NewV := v.Visit(ctx.Expresion())
+	TEMP := ""
 	if int64(len(List)) < 0 {
 		v.AddError(ctx.ID().GetSymbol().GetLine(), ctx.ID().GetSymbol().GetColumn(), "VECTOR", "ListaVacia", "SEMANTICO")
 		return false
-	} else if v.Visit(ctx.Expresion()).(int64) > int64(len(List)) {
+	} else if NewV.(Value).Valor.(int64) > int64(len(List)) {
 		v.AddError(ctx.ID().GetSymbol().GetLine(), ctx.ID().GetSymbol().GetColumn(), "VECTOR", "Fuera de rango", "SEMANTICO")
 		return false
 	}
+	Control_Count = true
+	v.Traductor.AddComentario("\t//--------------------")
+	v.Traductor.AddComentario("\t//GetVector")
+	v.Traductor.Br()
+	Stack := v.Traductor.NewTemp()
+	v.Traductor.GetStack(Stack, fmt.Sprint(Encontrado.Stack))
+	v.Traductor.Br()
+	Index := v.Traductor.NewTemp()
+	v.Traductor.Igual(Index, NewV.(Value).Temp, nil, nil)
+	v.Traductor.Br()
+	NewTemp := v.Traductor.NewTemp()
+	v.Traductor.Igual(NewTemp, "P", fmt.Sprint(v.EntornoActual.Size), "+")
+	v.Traductor.Contador(NewTemp, NewTemp, "+", "1")
+	v.Traductor.SetStack("(int)"+NewTemp, Stack)
+	v.Traductor.Contador("P", "P", "+", fmt.Sprint(v.EntornoActual.Size))
+	v.Traductor.callVoid("VectorCount")
+	Size := v.Traductor.NewTemp()
+	v.Traductor.GetStack(Size, "(int)P")
+	v.Traductor.Contador("P", "P", "-", fmt.Sprint(v.EntornoActual.Size))
+	v.Traductor.Br()
+	MsgError := v.Traductor.NewLabel()
+	Fin := v.Traductor.NewLabel()
+	NoError := v.Traductor.NewLabel()
+	v.Traductor.Contador(Size, Size, "-", "1")
+	v.Traductor.AddIf(Index, Size, ">", MsgError)
+	v.Traductor.AddIf(Index, "0", "<", MsgError)
+	v.Traductor.AddGoto(NoError)
+	v.Traductor.AddLabel(MsgError)
+	v.Traductor.AddPrint("66", "c")
+	v.Traductor.AddPrint("111", "c")
+	v.Traductor.AddPrint("117", "c")
+	v.Traductor.AddPrint("110", "c")
+	v.Traductor.AddPrint("100", "c")
+	v.Traductor.AddPrint("115", "c")
+	v.Traductor.AddPrint("69", "c")
+	v.Traductor.AddPrint("114", "c")
+	v.Traductor.AddPrint("114", "c")
+	v.Traductor.AddPrint("111", "c")
+	v.Traductor.AddPrint("114", "c")
+	v.Traductor.AddPrint("10", "c")
+	v.Traductor.AddGoto(Fin)
+	v.Traductor.AddLabel(NoError)
+	v.Traductor.Br()
+	NewTempGet := v.Traductor.NewTemp()
+	v.Traductor.Igual(NewTempGet, Index, Stack, "+")
+	TEMP = v.Traductor.NewTemp()
+	v.Traductor.GetHeap(TEMP, "(int)"+NewTempGet)
 
-	return List[v.Visit(ctx.Expresion()).(int64)]
+	v.Traductor.AddLabel(Fin)
+	v.Traductor.AddComentario("\t// Fin GetVector")
+	v.Traductor.AddComentario("\t//-----------------------")
+	v.Traductor.Br()
+
+	return NewValue(TEMP, nil, nil, List[NewV.(Value).Valor.(int64)])
 }
 
 func (v *Visitor) VisitAsignacionVector(ctx *parser.AsignacionVectorContext) interface{} {
@@ -1907,40 +1961,131 @@ func (v *Visitor) VisitAsignacionVector(ctx *parser.AsignacionVectorContext) int
 	if SymbolVacio(Encontrado) {
 		if Encontrado.TypeValue == "var" {
 			if ctx.Subasig().NUMBER() != nil {
+				fmt.Println("ASIGNACION VECTOR")
 				i, _ := strconv.ParseInt(ctx.Subasig().NUMBER().GetText(), 10, 64)
 				List := Encontrado.Value.([]interface{})
 
-				if i > int64(len(List)) {
-					v.AddError(ctx.ID().GetSymbol().GetLine(), ctx.ID().GetSymbol().GetColumn(), "VECTOR", "Fuera de rango", "SEMANTICO")
-					return false
-				}
+				v.Traductor.AddComentario("\t//--------------------")
+				v.Traductor.AddComentario("\t//Asignacion Vector")
+				v.Traductor.Br()
+				ValorIndex := v.Traductor.NewTemp()
+				v.Traductor.Igual(ValorIndex, fmt.Sprint(i), nil, nil)
+				v.Traductor.Br()
+				Stack := v.Traductor.NewTemp()
+				v.Traductor.GetStack(Stack, fmt.Sprint(Encontrado.Stack))
 				if ctx.GetOp().GetText() == "=" {
-					List[i] = v.Visit(ctx.Expresion())
-					v.EntornoActual.ActualizarSimbolo(Id, NewSimbolo(List, Encontrado.Type, Encontrado.TypeValue, true))
+					Control_Count = true
+					NewVal := v.Visit(ctx.Expresion())
 
-				} else if ctx.GetOp().GetText() == "+=" {
-					var aux interface{}
-					aux = List[i]
-					aux = aux.(int64) + v.Visit(ctx.Expresion()).(int64)
-					List[i] = aux
+					v.Traductor.Br()
+					NewTemp := v.Traductor.NewTemp()
+					v.Traductor.Igual(NewTemp, "P", fmt.Sprint(v.EntornoActual.Size), "+")
+					v.Traductor.Contador(NewTemp, NewTemp, "+", "1")
+					v.Traductor.SetStack("(int)"+NewTemp, Stack)
+					v.Traductor.Contador("P", "P", "+", fmt.Sprint(v.EntornoActual.Size))
+					v.Traductor.callVoid("VectorCount")
+					Size := v.Traductor.NewTemp()
+					v.Traductor.GetStack(Size, "(int)P")
+					v.Traductor.Contador("P", "P", "-", fmt.Sprint(v.EntornoActual.Size))
+					v.Traductor.Br()
+
+					MsgError := v.Traductor.NewLabel()
+					Fin := v.Traductor.NewLabel()
+					NoError := v.Traductor.NewLabel()
+					v.Traductor.Contador(Size, Size, "-", "1")
+					v.Traductor.AddIf(ValorIndex, Size, ">", MsgError)
+					v.Traductor.AddIf(ValorIndex, "0", "<", MsgError)
+					v.Traductor.AddGoto(NoError)
+					v.Traductor.AddLabel(MsgError)
+					v.Traductor.AddPrint("66", "c")
+					v.Traductor.AddPrint("111", "c")
+					v.Traductor.AddPrint("117", "c")
+					v.Traductor.AddPrint("110", "c")
+					v.Traductor.AddPrint("100", "c")
+					v.Traductor.AddPrint("115", "c")
+					v.Traductor.AddPrint("69", "c")
+					v.Traductor.AddPrint("114", "c")
+					v.Traductor.AddPrint("114", "c")
+					v.Traductor.AddPrint("111", "c")
+					v.Traductor.AddPrint("114", "c")
+					v.Traductor.AddPrint("10", "c")
+					v.Traductor.AddGoto(Fin)
+					v.Traductor.AddLabel(NoError)
+					v.Traductor.Br()
+					NewTempSet := v.Traductor.NewTemp()
+					v.Traductor.Igual(NewTempSet, ValorIndex, Stack, "+")
+					v.Traductor.SetHeap("(int)"+NewTempSet, fmt.Sprint(NewVal.(Value).Temp))
+					v.Traductor.AddLabel(Fin)
+					v.Traductor.AddComentario("\t// Fin Asignacion Vector")
+					v.Traductor.AddComentario("\t//-----------------------")
+					v.Traductor.Br()
+
+					List[i] = NewVal.(Value).Valor
 					v.EntornoActual.ActualizarSimbolo(Id, NewSimbolo(List, Encontrado.Type, Encontrado.TypeValue, true))
+					v.EntornoActual.ActualizarStack(Id, Encontrado.Stack)
 
 				}
 
 			} else {
 				iter := v.EntornoActual.BuscarSimbolo(ctx.Subasig().ID().GetText())
 				i := iter.Value.(int64)
-
 				List := Encontrado.Value.([]interface{})
 				if ctx.GetOp().GetText() == "=" {
-					List[i] = v.Visit(ctx.Expresion())
-					v.EntornoActual.ActualizarSimbolo(Id, NewSimbolo(List, Encontrado.Type, Encontrado.TypeValue, true))
+					NewVal := v.Visit(ctx.Expresion())
+					Control_Count = true
 
-				} else if ctx.GetOp().GetText() == "+=" {
-					var aux interface{}
-					aux = List[i]
-					aux = aux.(int64) + v.Visit(ctx.Expresion()).(int64)
-					List[i] = aux
+					v.Traductor.AddComentario("\t//--------------------")
+					v.Traductor.AddComentario("\t//Asignacion Vector")
+					v.Traductor.Br()
+					ValorIndex := v.Traductor.NewTemp()
+					v.Traductor.Igual(ValorIndex, fmt.Sprint(i), nil, nil)
+					v.Traductor.Br()
+					Stack := v.Traductor.NewTemp()
+					v.Traductor.GetStack(Stack, fmt.Sprint(Encontrado.Stack))
+					v.Traductor.Br()
+					NewTemp := v.Traductor.NewTemp()
+					v.Traductor.Igual(NewTemp, "P", fmt.Sprint(v.EntornoActual.Size), "+")
+					v.Traductor.Contador(NewTemp, NewTemp, "+", "1")
+					v.Traductor.SetStack("(int)"+NewTemp, Stack)
+					v.Traductor.Contador("P", "P", "+", fmt.Sprint(v.EntornoActual.Size))
+					v.Traductor.callVoid("VectorCount")
+					Size := v.Traductor.NewTemp()
+					v.Traductor.GetStack(Size, "(int)P")
+					v.Traductor.Contador("P", "P", "-", fmt.Sprint(v.EntornoActual.Size))
+					v.Traductor.Br()
+
+					MsgError := v.Traductor.NewLabel()
+					Fin := v.Traductor.NewLabel()
+					NoError := v.Traductor.NewLabel()
+					v.Traductor.Contador(Size, Size, "-", "1")
+					v.Traductor.AddIf(ValorIndex, Size, ">", MsgError)
+					v.Traductor.AddIf(ValorIndex, "0", "<", MsgError)
+					v.Traductor.AddGoto(NoError)
+					v.Traductor.AddLabel(MsgError)
+					v.Traductor.AddPrint("66", "c")
+					v.Traductor.AddPrint("111", "c")
+					v.Traductor.AddPrint("117", "c")
+					v.Traductor.AddPrint("110", "c")
+					v.Traductor.AddPrint("100", "c")
+					v.Traductor.AddPrint("115", "c")
+					v.Traductor.AddPrint("69", "c")
+					v.Traductor.AddPrint("114", "c")
+					v.Traductor.AddPrint("114", "c")
+					v.Traductor.AddPrint("111", "c")
+					v.Traductor.AddPrint("114", "c")
+					v.Traductor.AddPrint("10", "c")
+					v.Traductor.AddGoto(Fin)
+					v.Traductor.AddLabel(NoError)
+					v.Traductor.Br()
+					NewTempSet := v.Traductor.NewTemp()
+					v.Traductor.Igual(NewTempSet, ValorIndex, Stack, "+")
+					v.Traductor.SetHeap("(int)"+NewTempSet, fmt.Sprint(NewVal.(Value).Temp))
+					v.Traductor.AddLabel(Fin)
+					v.Traductor.AddComentario("\t// Fin Asignacion Vector")
+					v.Traductor.AddComentario("\t//-----------------------")
+					v.Traductor.Br()
+
+					List[i] = NewVal.(Value).Valor
 					v.EntornoActual.ActualizarSimbolo(Id, NewSimbolo(List, Encontrado.Type, Encontrado.TypeValue, true))
 
 				}

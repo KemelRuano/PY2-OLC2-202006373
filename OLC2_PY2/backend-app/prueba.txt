@@ -1,2 +1,4 @@
-var w = Int("10")
-print(w)
+func suma() -> Int {
+    return 1
+}
+print(suma())

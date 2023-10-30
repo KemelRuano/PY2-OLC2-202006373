@@ -3,10 +3,10 @@ package Components
 import (
 	"backend-app/Miceleanos"
 	"backend-app/parser"
+	"fmt"
 	"reflect"
 )
 
-var RETURNFUNCION bool = false
 var AuxPass interface{} = nil
 
 type Parametros struct {
@@ -33,31 +33,33 @@ func (v *Visitor) VisitFunciones(ctx *parser.FuncionesContext) interface{} {
 	Line := ctx.ID().GetSymbol().GetLine()
 	Column := ctx.ID().GetSymbol().GetColumn()
 	Id := ctx.ID().GetText()
-	ListParametros := v.Visit(ctx.Parametros()).([]Parametros)
+
+	var ListParametros []Parametros
+	if ctx.Parametros() != nil {
+		ListParametros = v.Visit(ctx.Parametros()).([]Parametros)
+	}
 	Tipo := ""
 	if ctx.FLECHA() != nil {
 		Tipo = ctx.Tipo().GetText()
 	} else {
 		Tipo = "void"
 	}
+
 	Instrucciones := ctx.Bloque()
 	NuevaFuncion := Function{ID: Id, Parametros: ListParametros, Tipo: Tipo, BloqueInstrucciones: Instrucciones}
 	VerificacionExistencia := v.EntornoActual.AddFuncion(Id, NuevaFuncion)
 	if VerificacionExistencia {
-		TaGlobal := NewSimbGlobal("Funcion", Tipo, v.EntornoActual.GetEntorno(), ctx.ID().GetSymbol().GetLine(), ctx.ID().GetSymbol().GetLine())
+		TaGlobal := NewSimbGlobal("Funcion", Tipo, v.EntornoActual.GetEntorno(), Line, ctx.ID().GetSymbol().GetLine())
 		v.AddGlobalSimbol(Id, TaGlobal)
 	} else {
-		v.AddError(ctx.ID().GetSymbol().GetLine(), ctx.ID().GetSymbol().GetLine(), "Funcion", "Ya existe en el entorno actual: "+Id, "SEMANTICO")
-		return false
-	}
-	if !VerificacionExistencia {
-		v.AddError(Line, Column, "FUNCION", "La funcion "+Id+" ya existe en el entorno actual", "Semantico")
+		v.AddError(Line, Column, "Funcion", "LA FUNCION -> "+Id+" YA EXISTE", "SEMANTICO")
 		return false
 	}
 	return true
 }
 
 func (v *Visitor) VisitParametros(ctx *parser.ParametrosContext) interface{} {
+	fmt.Println("Parametros")
 	NuevoParametro := Parametros{}
 	ListParametros := []Parametros{}
 	for i := 0; ctx.ID(i) != nil; i++ {
@@ -89,291 +91,307 @@ func (v *Visitor) VisitParametros(ctx *parser.ParametrosContext) interface{} {
 }
 
 func (v *Visitor) VisitFuncLLamada(ctx *parser.FuncLLamadaContext) interface{} {
-	RETURNFUNCION = false
-	var Variable interface{}
+
+	// var Variable interface{}
 	Id := ctx.ID().GetText()
 	Encontrado := v.EntornoActual.BuscarFuncion(Id)
-	if FuncionVacio(Encontrado) {
+	v.Traductor.InicioFuncion(Id)
+	if len(Encontrado.Parametros) == 0 {
+		v.Traductor.OpenFunction()
 		v.EntornoActual = NewEntorno(v.EntornoActual, Id)
-		Listcall := v.Visit(ctx.ParametrosLLamada()).([]FuncionLlamada)
-		ListParametros := Encontrado.Parametros
-
-		if len(Listcall) != len(ListParametros) {
-			Line := ctx.ID().GetSymbol().GetLine()
-			Column := ctx.ID().GetSymbol().GetColumn()
-			v.AddError(Line, Column, "LLAMADA FUNCION", "La cantidad de parametros no coincide con la funcion", "SEMANTICO")
-			return false
-		}
-
-		for i := 0; i < len(Listcall); i++ {
-
-			if ListParametros[i].EsInEx == "none" && Listcall[i].ID != "_" {
-				if ListParametros[i].Variable == Listcall[i].ID {
-					if ListParametros[i].EsVector {
-						if ListParametros[i].Tipo == "Int" {
-							if ListEnteros(Listcall[i].Valor.([]interface{})) {
-								NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", true)
-								v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
-							} else {
-								Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
-								Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
-								v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
-								return false
-							}
-						} else if ListParametros[i].Tipo == "Float" {
-							if ListFloat(Listcall[i].Valor.([]interface{})) {
-								NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", true)
-								v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
-							} else {
-								Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
-								Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
-								v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
-								return false
-							}
-						} else if ListParametros[i].Tipo == "String" {
-							if ListString(Listcall[i].Valor.([]interface{})) {
-								NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", true)
-								v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
-							} else {
-								Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
-								Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
-								v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
-								return false
-							}
-						} else if ListParametros[i].Tipo == "Character" {
-							if ListCharacter(Listcall[i].Valor.([]interface{})) {
-								NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", true)
-								v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
-							} else {
-								Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
-								Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
-								v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
-								return false
-							}
-						} else if ListParametros[i].Tipo == "Bool" {
-							if ListBool(Listcall[i].Valor.([]interface{})) {
-								NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", true)
-								v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
-							} else {
-								Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
-								Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
-								v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
-								return false
-							}
-						}
-
-					} else {
-						if ValidarTipo(Listcall[i].Valor, ListParametros[i].Tipo) {
-							NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", false)
-							v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
-						} else {
-							Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
-							Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
-							v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
-							return false
-						}
-					}
-
-				} else {
-					line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
-					col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
-					v.AddError(line, col, "LLAMADA FUNCION", "Los paremtros son incorrectos", "SEMANTICO")
-					return false
-				}
-				// ------------------------------------- Tipo 1 -------------------------------------
-				//-----------------------------------------------------------------------------------
-
-			} else if ListParametros[i].EsInEx != "_" && Listcall[i].ID != "_" {
-				if ListParametros[i].EsInEx == Listcall[i].ID {
-					if ListParametros[i].EsVector {
-						if ListParametros[i].Tipo == "Int" {
-							if ListEnteros(Listcall[i].Valor.([]interface{})) {
-								NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", true)
-								v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
-							} else {
-								Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
-								Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
-								v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
-								return false
-							}
-						} else if ListParametros[i].Tipo == "Float" {
-							if ListFloat(Listcall[i].Valor.([]interface{})) {
-								NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", true)
-								v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
-							} else {
-								Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
-								Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
-								v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
-								return false
-							}
-						} else if ListParametros[i].Tipo == "String" {
-							if ListString(Listcall[i].Valor.([]interface{})) {
-								NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", true)
-								v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
-							} else {
-								Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
-								Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
-								v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
-								return false
-							}
-						} else if ListParametros[i].Tipo == "Character" {
-							if ListCharacter(Listcall[i].Valor.([]interface{})) {
-								NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", true)
-								v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
-							} else {
-								Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
-								Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
-								v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
-								return false
-							}
-						} else if ListParametros[i].Tipo == "Bool" {
-							if ListBool(Listcall[i].Valor.([]interface{})) {
-								NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", true)
-								v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
-							} else {
-								Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
-								Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
-								v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
-								return false
-							}
-						}
-
-					} else {
-						if ValidarTipo(Listcall[i].Valor, ListParametros[i].Tipo) {
-							NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", false)
-							v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
-
-						} else {
-							Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
-							Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
-							v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
-							return false
-						}
-
-					}
-				} else {
-					Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
-					Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
-					v.AddError(Line, Col, "LLAMADA FUNCION", "El parametro no existe en la funcion", "SEMANITCO")
-					return false
-				}
-
-				// ------------------------------------- Tipo 2 -------------------------------------
-				//-----------------------------------------------------------------------------------
-
-			} else if ListParametros[i].EsInEx == "_" && Listcall[i].ID == "_" {
-				if ListParametros[i].EsVector {
-					if ListParametros[i].Tipo == "Int" {
-						if ListEnteros(Listcall[i].Valor.([]interface{})) {
-							NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", true)
-							v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
-						} else {
-							Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
-							Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
-							v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
-							return false
-						}
-					} else if ListParametros[i].Tipo == "Float" {
-						if ListFloat(Listcall[i].Valor.([]interface{})) {
-							NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", true)
-							v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
-						} else {
-							Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
-							Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
-							v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
-							return false
-						}
-					} else if ListParametros[i].Tipo == "String" {
-						if ListString(Listcall[i].Valor.([]interface{})) {
-							NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", true)
-							v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
-						} else {
-							Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
-							Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
-							v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
-							return false
-						}
-					} else if ListParametros[i].Tipo == "Character" {
-						if ListCharacter(Listcall[i].Valor.([]interface{})) {
-							NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", true)
-							v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
-						} else {
-							Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
-							Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
-							v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
-							return false
-						}
-					} else if ListParametros[i].Tipo == "Bool" {
-						if ListBool(Listcall[i].Valor.([]interface{})) {
-							NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", true)
-							v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
-						} else {
-							Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
-							Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
-							v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
-							return false
-						}
-					}
-
-				} else {
-					if Listcall[i].ValorRef == "none" {
-						if ValidarTipo(Listcall[i].Valor, ListParametros[i].Tipo) {
-							NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", false)
-							v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
-						} else {
-							Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
-							Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
-							v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANITCO")
-							return false
-						}
-					} else {
-						NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", false)
-						v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
-					}
-
-				}
-
-				// ------------------------------------- Tipo 3 -------------------------------------
-				//-----------------------------------------------------------------------------------
-
-			} else {
-				line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
-				col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
-				v.AddError(line, col, "LLAMADA FUNCION", "La llamada no necesita parametro", "SEMANITCO")
-				return false
-			}
-
-		}
-
 		Recorrer := Encontrado.BloqueInstrucciones.(*parser.BloqueContext)
 		for i := 0; Recorrer.Lista_proceso(i) != nil; i++ {
-			Variable = v.Visit(Recorrer.Lista_proceso(i))
-			if v.EntornoActual.Retorno {
-				v.EntornoActual.Retorno = false
-				break
-			}
-		}
-
-		for i := 0; i < len(Listcall); i++ {
-			if ListParametros[i].Inout {
-				if Listcall[i].isInout {
-					SearchSymbol := v.EntornoActual.BuscarSimbolo(ListParametros[i].Variable)
-					SearchNew := v.EntornoActual.BuscarSimbolo(Listcall[i].ValorRef)
-					SearchNew.Value = SearchSymbol.Value
-					v.EntornoActual.ActualizarSimbolo(Listcall[i].ValorRef, SearchNew)
-				}
-			}
-
+			v.Visit(Recorrer.Lista_proceso(i))
 		}
 		v.EntornoActual = v.EntornoActual.Padre
-	} else {
-		Line := ctx.ID().GetSymbol().GetLine()
-		Column := ctx.ID().GetSymbol().GetColumn()
-		v.AddError(Line, Column, "FUNCION", "La funcion "+Id+" no existe en el entorno actual", "Semantico")
-		return false
+		v.Traductor.CloseFunction()
 	}
+	v.Traductor.FinFuncion()
 
-	return Variable
+	return NewValue(10, nil, nil, 10)
+
+	// Encontrado := v.EntornoActual.BuscarFuncion(Id)
+	// if FuncionVacio(Encontrado) {
+	// 	v.EntornoActual = NewEntorno(v.EntornoActual, Id)
+	// 	Listcall := v.Visit(ctx.ParametrosLLamada()).([]FuncionLlamada)
+	// 	ListParametros := Encontrado.Parametros
+
+	// 	if len(Listcall) != len(ListParametros) {
+	// 		Line := ctx.ID().GetSymbol().GetLine()
+	// 		Column := ctx.ID().GetSymbol().GetColumn()
+	// 		v.AddError(Line, Column, "LLAMADA FUNCION", "La cantidad de parametros no coincide con la funcion", "SEMANTICO")
+	// 		return false
+	// 	}
+
+	// 	for i := 0; i < len(Listcall); i++ {
+
+	// 		if ListParametros[i].EsInEx == "none" && Listcall[i].ID != "_" {
+	// 			if ListParametros[i].Variable == Listcall[i].ID {
+	// 				if ListParametros[i].EsVector {
+	// 					if ListParametros[i].Tipo == "Int" {
+	// 						if ListEnteros(Listcall[i].Valor.([]interface{})) {
+	// 							NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", true)
+	// 							v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
+	// 						} else {
+	// 							Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
+	// 							Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
+	// 							v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
+	// 							return false
+	// 						}
+	// 					} else if ListParametros[i].Tipo == "Float" {
+	// 						if ListFloat(Listcall[i].Valor.([]interface{})) {
+	// 							NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", true)
+	// 							v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
+	// 						} else {
+	// 							Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
+	// 							Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
+	// 							v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
+	// 							return false
+	// 						}
+	// 					} else if ListParametros[i].Tipo == "String" {
+	// 						if ListString(Listcall[i].Valor.([]interface{})) {
+	// 							NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", true)
+	// 							v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
+	// 						} else {
+	// 							Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
+	// 							Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
+	// 							v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
+	// 							return false
+	// 						}
+	// 					} else if ListParametros[i].Tipo == "Character" {
+	// 						if ListCharacter(Listcall[i].Valor.([]interface{})) {
+	// 							NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", true)
+	// 							v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
+	// 						} else {
+	// 							Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
+	// 							Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
+	// 							v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
+	// 							return false
+	// 						}
+	// 					} else if ListParametros[i].Tipo == "Bool" {
+	// 						if ListBool(Listcall[i].Valor.([]interface{})) {
+	// 							NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", true)
+	// 							v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
+	// 						} else {
+	// 							Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
+	// 							Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
+	// 							v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
+	// 							return false
+	// 						}
+	// 					}
+
+	// 				} else {
+	// 					if ValidarTipo(Listcall[i].Valor, ListParametros[i].Tipo) {
+	// 						NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", false)
+	// 						v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
+	// 					} else {
+	// 						Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
+	// 						Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
+	// 						v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
+	// 						return false
+	// 					}
+	// 				}
+
+	// 			} else {
+	// 				line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
+	// 				col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
+	// 				v.AddError(line, col, "LLAMADA FUNCION", "Los paremtros son incorrectos", "SEMANTICO")
+	// 				return false
+	// 			}
+	// 			// ------------------------------------- Tipo 1 -------------------------------------
+	// 			//-----------------------------------------------------------------------------------
+
+	// 		} else if ListParametros[i].EsInEx != "_" && Listcall[i].ID != "_" {
+	// 			if ListParametros[i].EsInEx == Listcall[i].ID {
+	// 				if ListParametros[i].EsVector {
+	// 					if ListParametros[i].Tipo == "Int" {
+	// 						if ListEnteros(Listcall[i].Valor.([]interface{})) {
+	// 							NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", true)
+	// 							v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
+	// 						} else {
+	// 							Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
+	// 							Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
+	// 							v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
+	// 							return false
+	// 						}
+	// 					} else if ListParametros[i].Tipo == "Float" {
+	// 						if ListFloat(Listcall[i].Valor.([]interface{})) {
+	// 							NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", true)
+	// 							v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
+	// 						} else {
+	// 							Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
+	// 							Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
+	// 							v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
+	// 							return false
+	// 						}
+	// 					} else if ListParametros[i].Tipo == "String" {
+	// 						if ListString(Listcall[i].Valor.([]interface{})) {
+	// 							NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", true)
+	// 							v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
+	// 						} else {
+	// 							Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
+	// 							Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
+	// 							v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
+	// 							return false
+	// 						}
+	// 					} else if ListParametros[i].Tipo == "Character" {
+	// 						if ListCharacter(Listcall[i].Valor.([]interface{})) {
+	// 							NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", true)
+	// 							v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
+	// 						} else {
+	// 							Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
+	// 							Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
+	// 							v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
+	// 							return false
+	// 						}
+	// 					} else if ListParametros[i].Tipo == "Bool" {
+	// 						if ListBool(Listcall[i].Valor.([]interface{})) {
+	// 							NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", true)
+	// 							v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
+	// 						} else {
+	// 							Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
+	// 							Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
+	// 							v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
+	// 							return false
+	// 						}
+	// 					}
+
+	// 				} else {
+	// 					if ValidarTipo(Listcall[i].Valor, ListParametros[i].Tipo) {
+	// 						NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", false)
+	// 						v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
+
+	// 					} else {
+	// 						Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
+	// 						Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
+	// 						v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
+	// 						return false
+	// 					}
+
+	// 				}
+	// 			} else {
+	// 				Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
+	// 				Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
+	// 				v.AddError(Line, Col, "LLAMADA FUNCION", "El parametro no existe en la funcion", "SEMANITCO")
+	// 				return false
+	// 			}
+
+	// 			// ------------------------------------- Tipo 2 -------------------------------------
+	// 			//-----------------------------------------------------------------------------------
+
+	// 		} else if ListParametros[i].EsInEx == "_" && Listcall[i].ID == "_" {
+	// 			if ListParametros[i].EsVector {
+	// 				if ListParametros[i].Tipo == "Int" {
+	// 					if ListEnteros(Listcall[i].Valor.([]interface{})) {
+	// 						NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", true)
+	// 						v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
+	// 					} else {
+	// 						Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
+	// 						Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
+	// 						v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
+	// 						return false
+	// 					}
+	// 				} else if ListParametros[i].Tipo == "Float" {
+	// 					if ListFloat(Listcall[i].Valor.([]interface{})) {
+	// 						NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", true)
+	// 						v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
+	// 					} else {
+	// 						Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
+	// 						Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
+	// 						v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
+	// 						return false
+	// 					}
+	// 				} else if ListParametros[i].Tipo == "String" {
+	// 					if ListString(Listcall[i].Valor.([]interface{})) {
+	// 						NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", true)
+	// 						v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
+	// 					} else {
+	// 						Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
+	// 						Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
+	// 						v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
+	// 						return false
+	// 					}
+	// 				} else if ListParametros[i].Tipo == "Character" {
+	// 					if ListCharacter(Listcall[i].Valor.([]interface{})) {
+	// 						NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", true)
+	// 						v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
+	// 					} else {
+	// 						Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
+	// 						Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
+	// 						v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
+	// 						return false
+	// 					}
+	// 				} else if ListParametros[i].Tipo == "Bool" {
+	// 					if ListBool(Listcall[i].Valor.([]interface{})) {
+	// 						NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", true)
+	// 						v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
+	// 					} else {
+	// 						Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
+	// 						Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
+	// 						v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANTICO")
+	// 						return false
+	// 					}
+	// 				}
+
+	// 			} else {
+	// 				if Listcall[i].ValorRef == "none" {
+	// 					if ValidarTipo(Listcall[i].Valor, ListParametros[i].Tipo) {
+	// 						NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", false)
+	// 						v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
+	// 					} else {
+	// 						Line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
+	// 						Col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
+	// 						v.AddError(Line, Col, "LLAMADA FUNCION", "El tipo es distinto al de la funcion", "SEMANITCO")
+	// 						return false
+	// 					}
+	// 				} else {
+	// 					NuevoSymbol := NewSimbolo(Listcall[i].Valor, ListParametros[i].Tipo, "var", false)
+	// 					v.EntornoActual.EnvAddSimbolo(ListParametros[i].Variable, NuevoSymbol)
+	// 				}
+
+	// 			}
+
+	// 			// ------------------------------------- Tipo 3 -------------------------------------
+	// 			//-----------------------------------------------------------------------------------
+
+	// 		} else {
+	// 			line := ctx.ParametrosLLamada().Expresion(i).GetStart().GetLine()
+	// 			col := ctx.ParametrosLLamada().Expresion(i).GetStart().GetColumn()
+	// 			v.AddError(line, col, "LLAMADA FUNCION", "La llamada no necesita parametro", "SEMANITCO")
+	// 			return false
+	// 		}
+
+	// 	}
+
+	// 	Recorrer := Encontrado.BloqueInstrucciones.(*parser.BloqueContext)
+	// 	for i := 0; Recorrer.Lista_proceso(i) != nil; i++ {
+	// 		Variable = v.Visit(Recorrer.Lista_proceso(i))
+	// 		if v.EntornoActual.Retorno {
+	// 			v.EntornoActual.Retorno = false
+	// 			break
+	// 		}
+	// 	}
+
+	// 	for i := 0; i < len(Listcall); i++ {
+	// 		if ListParametros[i].Inout {
+	// 			if Listcall[i].isInout {
+	// 				SearchSymbol := v.EntornoActual.BuscarSimbolo(ListParametros[i].Variable)
+	// 				SearchNew := v.EntornoActual.BuscarSimbolo(Listcall[i].ValorRef)
+	// 				SearchNew.Value = SearchSymbol.Value
+	// 				v.EntornoActual.ActualizarSimbolo(Listcall[i].ValorRef, SearchNew)
+	// 			}
+	// 		}
+
+	// 	}
+	// 	v.EntornoActual = v.EntornoActual.Padre
+	// } else {
+	// 	Line := ctx.ID().GetSymbol().GetLine()
+	// 	Column := ctx.ID().GetSymbol().GetColumn()
+	// 	v.AddError(Line, Column, "FUNCION", "La funcion "+Id+" no existe en el entorno actual", "Semantico")
+	// 	return false
+	// }
+
+	// return Variable
 }
 
 func (v *Visitor) VisitParametrosLLamada(ctx *parser.ParametrosLLamadaContext) interface{} {
@@ -427,8 +445,12 @@ func (v *Visitor) VisitRetornar(ctx *parser.RetornarContext) interface{} {
 		valor = "break"
 	} else if ctx.RETURN() != nil {
 		if ctx.Expresion() != nil {
+
 			v.EntornoActual.Retorno = true
 			valor = v.Visit(ctx.Expresion())
+			v.Traductor.AddComentario("\t // Retorno ")
+			NewRet := v.Traductor.NewTemp()
+			v.Traductor.Igual(NewRet, "P", fmt.Sprint(v.EntornoActual.Size), "+")
 
 			return valor
 		}
@@ -440,7 +462,10 @@ func (v *Visitor) VisitRetornar(ctx *parser.RetornarContext) interface{} {
 }
 
 func (v *Visitor) VisitPrintLLamada(ctx *parser.PrintLLamadaContext) interface{} {
-	return v.Visit(ctx.FuncLLamada())
+	v.Visit(ctx.FuncLLamada())
+	v.Traductor.AddComentario("\t // Print ")
+	v.Traductor.Br()
+	return NewValue(true, nil, nil, int64(10))
 }
 
 func ValidarTipo(valor interface{}, tipo string) bool {

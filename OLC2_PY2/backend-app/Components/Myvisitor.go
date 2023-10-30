@@ -720,7 +720,6 @@ func (v *Visitor) VisitPrint(ctx *parser.PrintContext) interface{} {
 		Print := v.Visit(ctx.Expresion(i))
 		Valor := Print.(Value).Valor
 		Temp := Print.(Value).Temp
-
 		if Miceleanos.IsString(Valor) {
 			if len(Valor.(string)) < 2 {
 
@@ -747,6 +746,7 @@ func (v *Visitor) VisitPrint(ctx *parser.PrintContext) interface{} {
 			}
 
 		} else if Miceleanos.IsInt(Valor) {
+			fmt.Println("Valor: ", Valor)
 			// C3D Imprimir entero
 			v.Traductor.AddComentario("\t//Imprimir Entero")
 			v.Traductor.AddPrint("(int) "+fmt.Sprint(Temp), "d")

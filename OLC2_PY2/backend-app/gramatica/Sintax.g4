@@ -142,7 +142,7 @@ tipofuncion: tipo
             ;
 tipoinout : INOUT ;
 
-funcLLamada: ID OPEN_PAREN parametrosLLamada CLOSE_PAREN;
+funcLLamada: ID OPEN_PAREN (parametrosLLamada)? CLOSE_PAREN;
 parametrosLLamada: (ID DOSPUNTOS)? REFERENCIA? expresion (COMA (ID DOSPUNTOS)? REFERENCIA? expresion)*;
 
 

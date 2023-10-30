@@ -41,6 +41,12 @@ func (t *Traduction) GetIndex() int {
 	t.IndexStack++
 	return newpos
 }
+func (t *Traduction) OpenFunction() {
+	t.IsMain = false
+}
+func (t *Traduction) CloseFunction() {
+	t.IsMain = true
+}
 
 // asignacion
 func (t *Traduction) Igual(NewTemp string, l interface{}, r interface{}, op interface{}) {
@@ -118,7 +124,7 @@ func (t *Traduction) AddComentario(comentario string) {
 		NewCode := "\t" + comentario + "\n"
 		t.List_Process = append(t.List_Process, NewCode)
 	} else {
-		NewCode := "\t" + comentario + "\n"
+		NewCode := comentario + "\n"
 		t.List_funciones = append(t.List_funciones, NewCode)
 	}
 }
@@ -200,6 +206,15 @@ func (t *Traduction) Return(tipo interface{}) {
 			t.List_funciones = append(t.List_funciones, "\treturn "+fmt.Sprint(tipo)+"; \n")
 		}
 	}
+}
+
+func (t *Traduction) InicioFuncion(id string) {
+
+	t.List_funciones = append(t.List_funciones, "void "+id+" () { \n")
+}
+
+func (t *Traduction) FinFuncion() {
+	t.List_funciones = append(t.List_funciones, "} \n")
 }
 
 // ------------------------------------ Funciones Nativas ------------------------------------
@@ -311,5 +326,10 @@ func (t *Traduction) GenerateTraduction() []string {
 }
 
 func (t *Traduction) Br() {
-	t.List_Process = append(t.List_Process, "\n")
+	if t.IsMain {
+		t.List_Process = append(t.List_Process, "\n")
+	} else {
+		t.List_funciones = append(t.List_funciones, "\n")
+	}
+
 }
